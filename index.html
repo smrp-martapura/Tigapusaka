@@ -3,490 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Toko Bulanan - CV. Tiga Pusako Borneo</title>
+    <title>Monitoring Toko - CV. Tiga Pusako Borneo</title>
     
-    <!-- TRICK SINGLE FILE PWA: Suntikan Manifest Langsung Tanpa File Eksternal -->
-    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22short_name%22%3A%22CV%20TIGA%20PUSAKA%22%2C%22name%22%3A%22CV%20Tiga%20Pusako%20Borneo%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F869%2F869636.png%22%2C%22type%22%3A%22image%252Fpng%22%2C%22sizes%22%3A%22512x512%22%7D%5D%7D">
-    
+    <!-- PWA CONFIGURATION -->
+    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22short_name%22%3A%22Tiga%20Pusako%22%2C%22name%22%3A%22CV%20Tiga%20Pusako%20Borneo%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F869%2F869636.png%22%2C%22type%22%3A%22image%252Fpng%22%2C%22sizes%22%3A%22512x512%22%7D%5D%7D">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="text-slate-800 antialiased">
 
-    <!-- NAVIGATION -->
-    <header class="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="p-2.5 bg-blue-600 text-white rounded-xl shadow-md">
-                    <i class="fa-solid fa-store text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-slate-950 tracking-tight leading-tight">CV. Tiga Pusako Borneo</h1>
-                    <p class="text-xs text-slate-400 font-medium">Martapura | Performance Bulanan</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-3">
-                <div id="roleBadge" class="flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="roleText">Mode: Viewer (Hanya Lihat)</span>
-                </div>
-                <button onclick="toggleAccessMode()" id="btnToggleMode" class="flex items-center space-x-2 px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition duration-200">
-                    <i class="fa-solid fa-lock-open mr-1"></i> Masuk Admin
-                </button>
-            </div>
+    <!-- HEADER -->
+    <header class="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <h1 class="font-bold text-slate-950">CV. Tiga Pusako Borneo</h1>
+            <button onclick="toggleAccessMode()" id="btnToggleMode" class="px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition">
+                Masuk Admin
+            </button>
         </div>
     </header>
 
-    <!-- MAIN CONTENT -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- BANNER INFO -->
-        <div class="mb-8 p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl shadow-xl relative overflow-hidden">
-            <div class="relative z-10">
-                <span class="px-3 py-1 bg-white/10 text-xs font-semibold rounded-full tracking-wider uppercase mb-3 inline-block">Profil Toko Resmi</span>
-                <h2 class="text-2xl font-extrabold mb-1">CV. TIGA PUSAKO BORNEO</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-slate-300 mt-3 border-t border-white/10 pt-3">
-                    <div class="space-y-1">
-                        <p><i class="fa-solid fa-location-dot w-5 text-blue-400"></i> Simpang Martapura/F [SMRP]</p>
-                        <p><i class="fa-solid fa-road w-5 text-blue-400"></i> Jl. Cempaka Gg. Flamboyan RT. 0</p>
-                    </div>
-                    <div class="space-y-1">
-                        <p><i class="fa-solid fa-id-card w-5 text-blue-400"></i> NPWP: 1000 0000 0689 5166</p>
-                        <p><i class="fa-solid fa-map w-5 text-blue-400"></i> Jl. Gg. Rahayu RT. 011 RW. 00 Martapura</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+    <main class="max-w-7xl mx-auto px-4 py-8">
         <!-- METRICS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <span class="text-xs font-semibold text-slate-400 uppercase">Total Sales Toko (Actual)</span>
-                <h3 id="totalSalesAmount" class="text-2xl font-bold text-slate-900 mt-2">Rp 0</h3>
-                <div class="text-xs text-slate-400 mt-1">Rata-rata Sales/Hari: <span id="avgSalesAmount" class="font-semibold text-slate-600">Rp 0</span></div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Actual Sales</p>
+                <h3 id="totalSalesAmount" class="text-lg font-bold text-slate-900">Rp 0</h3>
             </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <span class="text-xs font-semibold text-slate-400 uppercase">Actual GM Toko (Avg)</span>
-                <h3 id="actualGMPercent" class="text-2xl font-bold text-emerald-600 mt-2">0%</h3>
-                <div class="text-xs text-slate-400 mt-1">Target GM Toko: <span id="targetGMPercent" class="font-semibold text-emerald-600">0%</span></div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Actual GM%</p>
+                <h3 id="actualGMPercent" class="text-lg font-bold text-emerald-600">0%</h3>
             </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <span class="text-xs font-semibold text-slate-400 uppercase">Pencapaian ACV Sales</span>
-                <h3 id="avgACVPercent" class="text-2xl font-bold text-blue-600 mt-2">0%</h3>
-                <div class="text-xs text-slate-400 mt-1">Target Sales: <span id="totalTargetSales" class="font-semibold">Rp 0</span></div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">ACV Sales</p>
+                <h3 id="avgACVPercent" class="text-lg font-bold text-blue-600">0%</h3>
             </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <span class="text-xs font-semibold text-slate-400 uppercase">Sisa Target Sales</span>
-                <h3 id="remainingTargetSales" class="text-2xl font-bold text-red-500 mt-2">Rp 0</h3>
-                <div class="text-xs text-slate-400 mt-1">Status Target GM: <span id="remainingTargetGM" class="font-semibold text-red-400">0%</span></div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Sisa Target</p>
+                <h3 id="remainingTargetSales" class="text-lg font-bold text-red-500">Rp 0</h3>
             </div>
         </div>
 
-        <!-- ANALYTICS INSIGHTS BOARD -->
-        <div class="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl">
-            <div class="flex items-center space-x-2 mb-3">
-                <i class="fa-solid fa-chart-line text-blue-600 text-lg"></i>
-                <h3 class="font-bold text-slate-900 text-base">Analisis & Rekomendasi Profitabilitas Toko</h3>
-            </div>
-            <p id="aiInsightText" class="text-sm text-slate-700 leading-relaxed">
-                Menghubungkan ke Realtime Database...
-            </p>
+        <!-- ANALISIS PROYEKSI -->
+        <div class="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl shadow-inner">
+            <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2"><i class="fa-solid fa-calculator text-blue-600"></i> Analisis Proyeksi Akhir Bulan</h3>
+            <div id="aiInsightText" class="text-sm text-slate-700 leading-relaxed space-y-2">Memuat data analisis...</div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- PANEL KIRI (INPUT ADMIN) -->
-            <div id="adminPanel" class="lg:col-span-1 space-y-6 hidden">
-                <div class="bg-white p-6 rounded-2xl border border-blue-200 shadow-lg">
-                    <h3 class="font-bold text-slate-900 text-lg mb-4">Input Sales Harian</h3>
-                    <form id="salesForm" onsubmit="handleTransactionSubmit(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tanggal Transaksi</label>
-                            <input type="date" id="txDate" required class="w-full px-3 py-2 border rounded-xl text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Total Sales Hari Ini (Rp)</label>
-                            <input type="number" id="txTotal" required placeholder="Contoh: 3500000" class="w-full px-3 py-2 border rounded-xl text-sm font-semibold">
-                        </div>
-                        <button type="submit" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl text-sm hover:bg-blue-700">Simpan Sales Harian</button>
-                    </form>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-md space-y-4">
-                    <h3 class="font-bold text-slate-900 font-semibold">Atur Target & Actual GM%</h3>
-                    <form onsubmit="handleUpdateTargets(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">Target Sales Bulanan (Rp)</label>
-                            <input type="number" id="targetSalesInput" required class="w-full px-3 py-2 border rounded-xl text-sm">
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">Target GM (%)</label>
-                                <input type="number" id="targetGMInput" step="0.1" min="0" max="100" required class="w-full px-3 py-2 border rounded-xl text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-1">Actual GM Avg (%)</label>
-                                <input type="number" id="actualGMInput" step="0.1" min="0" max="100" required class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-emerald-700">
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-xl text-xs">Simpan Parameter GM & Target</button>
-                    </form>
-                    
-                    <hr class="border-slate-100">
-                    
-                    <div>
-                        <h4 class="text-xs font-bold text-red-500 uppercase mb-2">Klosingan Akhir Bulan</h4>
-                        <button onclick="triggerClosing()" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-box-archive"></i> Klosing & Simpan Bulan Ini
-                        </button>
+        <!-- PANEL ADMIN (TERSEMBUNYI) -->
+        <div id="adminPanel" class="hidden mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-2xl border border-blue-200 shadow-lg">
+                <h3 class="font-bold mb-4">Input Sales</h3>
+                <form id="salesForm" onsubmit="handleTransactionSubmit(event)" class="space-y-3">
+                    <input type="date" id="txDate" required class="w-full p-2 border rounded-lg text-sm">
+                    <input type="number" id="txTotal" placeholder="Nominal Sales (Rp)" required class="w-full p-2 border rounded-lg text-sm">
+                    <button class="w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">Simpan</button>
+                </form>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-blue-200 shadow-lg">
+                <h3 class="font-bold mb-4">Update Target</h3>
+                <form onsubmit="handleUpdateTargets(event)" class="space-y-3">
+                    <input type="number" id="targetSalesInput" placeholder="Target Bulanan (Rp)" required class="w-full p-2 border rounded-lg text-sm">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="targetGMInput" placeholder="Target GM %" step="0.1" required class="w-full p-2 border rounded-lg text-sm">
+                        <input type="number" id="actualGMInput" placeholder="Actual GM %" step="0.1" required class="w-full p-2 border rounded-lg text-sm">
                     </div>
-                </div>
-            </div>
-
-            <!-- WELCOME VIEWER -->
-            <div id="viewerWelcome" class="lg:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100 flex flex-col justify-between">
-                <div>
-                    <h3 class="font-bold text-slate-900 text-lg mb-2">Sistem Dashboard Aktif (Realtime Cloud)</h3>
-                    <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                        Dashboard ini terhubung secara global dengan **Firebase Realtime Database**. Semua perangkat akan melihat perubahan data secara instan!
-                    </p>
-                </div>
-            </div>
-
-            <!-- PANEL KANAN (GRAFIK & REALISASI TARGET) -->
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 class="font-bold text-slate-900 text-lg mb-6">Grafik Tren Penjualan Harian (Rupiah)</h3>
-                    <div class="h-64"><canvas id="salesChart"></canvas></div>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 class="font-bold text-slate-900 text-lg mb-4">Realisasi Target Bulanan Toko</h3>
-                    <div class="space-y-6" id="progressContainer"></div>
-                </div>
+                    <button class="w-full py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold">Simpan Target</button>
+                </form>
             </div>
         </div>
 
-        <!-- TRANSACTIONS LOG -->
-        <div class="mt-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 class="font-bold text-slate-900 text-lg pb-6 border-b border-slate-100">Histori Sales Harian Bulan Ini</h3>
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b text-xs font-bold text-slate-400">
-                            <th class="py-4 px-4">Tanggal</th>
-                            <th class="py-4 px-4 text-right">Actual Sales Harian</th>
-                            <th class="py-4 px-4 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactionTableBody" class="text-sm divide-y divide-slate-50"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- MONTHLY CLOSING HISTORY LOG -->
-        <div class="mt-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 class="font-bold text-slate-900 text-lg pb-6 border-b border-slate-100">Arsip Klosingan Bulanan</h3>
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b text-xs font-bold text-slate-400">
-                            <th class="py-4 px-4">Bulan Klosing</th>
-                            <th class="py-4 px-4 text-right">Target Sales</th>
-                            <th class="py-4 px-4 text-right">Actual Sales</th>
-                            <th class="py-4 px-4 text-center">ACV Sales (%)</th>
-                            <th class="py-4 px-4 text-center">Target GM%</th>
-                            <th class="py-4 px-4 text-center">Actual GM% (Avg)</th>
-                            <th class="py-4 px-4 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="closingTableBody" class="text-sm divide-y divide-slate-50"></tbody>
-                </table>
-            </div>
+        <!-- GRAFIK -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-8">
+            <h3 class="font-bold mb-6">Tren Penjualan</h3>
+            <div class="h-64"><canvas id="salesChart"></canvas></div>
         </div>
     </main>
-
-    <!-- ADMIN MODAL -->
-    <div id="adminPinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full mx-4">
-            <h3 class="text-lg font-bold text-slate-900 text-center mb-2">Verifikasi Owner / Admin</h3>
-            <input type="password" id="adminPinInput" class="w-full px-4 py-3 border rounded-xl text-center text-lg mb-4 tracking-widest">
-            <div class="flex gap-3">
-                <button onclick="closePinModal()" class="flex-1 py-2 bg-slate-100 rounded-xl text-xs font-semibold">Batal</button>
-                <button onclick="verifyAdminPin()" class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold">Masuk</button>
-            </div>
-        </div>
-    </div>
 
     <!-- FIREBASE SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <script>
-        // CONFIG FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyC0vc5NmxqXAmR7FGQIRqX-NcknIuCZpIU",
-            authDomain: "tiga-pusaka.firebaseapp.com",
             databaseURL: "https://tiga-pusaka-default-rtdb.asia-southeast1.firebasedatabase.app/",
-            projectId: "tiga-pusaka",
-            storageBucket: "tiga-pusaka.firebasestorage.app",
-            messagingSenderId: "126057813661",
-            appId: "1:126057813661:web:99637af79afa77bcdaa674",
-            measurementId: "G-91SN9E2ZVK"
+            projectId: "tiga-pusaka"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let storeTargets = { targetSales: 45000000, targetGM: 20, actualGMAvg: 18.5 };
+        let storeTargets = { targetSales: 0, targetGM: 0, actualGMAvg: 0 };
         let transactions = [];
-        let closingHistory = [];
         let isAdmin = false;
         let salesChart = null;
 
-        function initFirebaseListeners() {
+        function init() {
             document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
-
-            db.ref("store_config/targets").on("value", (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    storeTargets = data;
-                    document.getElementById('targetSalesInput').value = storeTargets.targetSales;
-                    document.getElementById('targetGMInput').value = storeTargets.targetGM;
-                    document.getElementById('actualGMInput').value = storeTargets.actualGMAvg;
-                }
-                updateUI();
-            });
-
-            db.ref("transactions").on("value", (snapshot) => {
+            db.ref("store_config/targets").on("value", s => { if(s.val()) storeTargets = s.val(); updateUI(); });
+            db.ref("transactions").on("value", s => {
                 transactions = [];
-                const data = snapshot.val();
-                if (data) {
-                    Object.keys(data).forEach((key) => {
-                        transactions.push({ id: key, date: data[key].date, total: data[key].total });
-                    });
-                }
-                updateUI();
-            });
-
-            db.ref("closings").on("value", (snapshot) => {
-                closingHistory = [];
-                const data = snapshot.val();
-                if (data) {
-                    Object.keys(data).forEach((key) => {
-                        closingHistory.push({ id: key, ...data[key] });
-                    });
-                    closingHistory.sort((a, b) => b.timestamp - a.timestamp);
-                }
+                s.forEach(child => transactions.push({id: child.key, ...child.val()}));
                 updateUI();
             });
         }
 
         function updateUI() {
-            updateDashboardMetrics();
-            renderProgressBars();
-            renderTransactions();
-            renderClosingHistory();
-            renderSalesChart();
-            generateAnalysisInsight();
-        }
-
-        function toggleAccessMode() {
-            if (isAdmin) {
-                isAdmin = false;
-                updateRoleUI();
-            } else {
-                document.getElementById('adminPinModal').classList.remove('hidden');
-                document.getElementById('adminPinInput').focus();
-            }
-        }
-
-        function closePinModal() {
-            document.getElementById('adminPinModal').classList.add('hidden');
-            document.getElementById('adminPinInput').value = '';
-        }
-
-        function verifyAdminPin() {
-            if (document.getElementById('adminPinInput').value === "19012226") {
-                isAdmin = true;
-                closePinModal();
-                updateRoleUI();
-            } else {
-                alert("PIN Salah!");
-            }
-        }
-
-        function updateRoleUI() {
-            document.getElementById('roleText').innerText = isAdmin ? "Mode: Admin" : "Mode: Viewer (Hanya Lihat)";
-            document.getElementById('btnToggleMode').innerHTML = isAdmin ? "Keluar Admin" : "Masuk Admin";
-            document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
-            document.getElementById('viewerWelcome').classList.toggle('hidden', isAdmin);
-            updateUI();
-        }
-
-        function updateDashboardMetrics() {
             let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
-            let targetSales = storeTargets.targetSales;
-            let targetGM = storeTargets.targetGM;
-            let actualGMAvg = storeTargets.actualGMAvg;
-            
-            let avgSales = transactions.length > 0 ? (totalSales / transactions.length) : 0;
-            let remainingSales = Math.max(0, targetSales - totalSales);
-            let acvSales = targetSales > 0 ? Math.round((totalSales / targetSales) * 100) : 0;
-            let gapGM = Math.max(0, targetGM - actualGMAvg);
-
             document.getElementById('totalSalesAmount').innerText = "Rp " + totalSales.toLocaleString('id-ID');
-            document.getElementById('avgSalesAmount').innerText = "Rp " + Math.round(avgSales).toLocaleString('id-ID');
-            document.getElementById('actualGMPercent').innerText = actualGMAvg + "%";
-            document.getElementById('targetGMPercent').innerText = targetGM + "% Target";
-            document.getElementById('avgACVPercent').innerText = acvSales + "%";
-            document.getElementById('totalTargetSales').innerText = "Rp " + targetSales.toLocaleString('id-ID');
-            document.getElementById('remainingTargetSales').innerText = "Rp " + remainingSales.toLocaleString('id-ID');
-            document.getElementById('remainingTargetGM').innerText = gapGM > 0 ? "Kurang " + gapGM.toFixed(1) + "%" : "Target Tercapai";
+            document.getElementById('actualGMPercent').innerText = storeTargets.actualGMAvg + "%";
+            document.getElementById('avgACVPercent').innerText = Math.round((totalSales/storeTargets.targetSales)*100) + "%";
+            document.getElementById('remainingTargetSales').innerText = "Rp " + Math.max(0, storeTargets.targetSales - totalSales).toLocaleString('id-ID');
+            
+            generateAnalysisInsight(totalSales);
+            renderChart();
         }
 
-        function handleTransactionSubmit(e) {
-            e.preventDefault();
-            const total = parseFloat(document.getElementById('txTotal').value);
-            const date = document.getElementById('txDate').value;
-            db.ref("transactions").push({ date: date, total: total }).then(() => {
-                document.getElementById('txTotal').value = '';
-            });
-        }
+        function generateAnalysisInsight(totalSales) {
+            const today = new Date();
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const dayOfMonth = today.getDate();
+            const remainingDays = daysInMonth - dayOfMonth;
+            const avgDailySales = dayOfMonth > 0 ? (totalSales / dayOfMonth) : 0;
+            const projectedEndSales = totalSales + (avgDailySales * remainingDays);
+            const remainingTargetSales = Math.max(0, storeTargets.targetSales - totalSales);
+            const requiredDailySales = remainingDays > 0 ? (remainingTargetSales / remainingDays) : 0;
+            const projectedGMRupiah = (projectedEndSales * (storeTargets.actualGMAvg / 100));
 
-        function handleUpdateTargets(e) {
-            e.preventDefault();
-            const ts = parseFloat(document.getElementById('targetSalesInput').value);
-            const tg = parseFloat(document.getElementById('targetGMInput').value);
-            const ag = parseFloat(document.getElementById('actualGMInput').value) || 0;
-            db.ref("store_config/targets").set({ targetSales: ts, targetGM: tg, actualGMAvg: ag });
-        }
-
-        function renderProgressBars() {
-            let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
-            let targetSales = storeTargets.targetSales;
-            let targetGM = storeTargets.targetGM;
-            let actualGMAvg = storeTargets.actualGMAvg;
-            let pctSales = Math.min(100, Math.round((totalSales / targetSales) * 100)) || 0;
-            let pctGM = Math.min(100, Math.round((actualGMAvg / targetGM) * 100)) || 0;
-
-            document.getElementById('progressContainer').innerHTML = `
-                <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl">
-                    <div class="flex justify-between items-center mb-1 text-sm">
-                        <span class="font-bold text-slate-900">Realisasi Sales Bulanan</span>
-                        <span class="font-bold text-blue-600">${pctSales}%</span>
-                    </div>
-                    <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
-                        <div class="bg-blue-600 h-full" style="width: ${pctSales}%"></div>
-                    </div>
-                </div>
-                <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl">
-                    <div class="flex justify-between items-center mb-1 text-sm">
-                        <span class="font-bold text-slate-900">Rata-rata Margin Profit Toko (GM%)</span>
-                        <span class="font-bold text-emerald-600">${actualGMAvg}% / ${targetGM}%</span>
-                    </div>
-                    <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
-                        <div class="bg-emerald-500 h-full" style="width: ${pctGM}%"></div>
-                    </div>
-                </div>
+            let html = `
+                <p>• <strong>Estimasi Penjualan Akhir Bulan:</strong> Rp ${Math.round(projectedEndSales).toLocaleString('id-ID')}</p>
+                <p>• <strong>Target Sisa yang harus dikejar:</strong> <span class="text-red-500 font-bold">Rp ${remainingTargetSales.toLocaleString('id-ID')}</span></p>
+                <p>• <strong>Target Harian (untuk sisa ${remainingDays} hari):</strong> <span class="text-blue-600 font-bold">Rp ${Math.round(requiredDailySales).toLocaleString('id-ID')}/hari</span></p>
+                <p>• <strong>Estimasi Laba Kotor (GM) Akhir Bulan:</strong> <span class="text-emerald-600 font-bold">Rp ${Math.round(projectedGMRupiah).toLocaleString('id-ID')}</span></p>
             `;
+            document.getElementById('aiInsightText').innerHTML = html;
         }
 
-        function renderTransactions() {
-            const sortedTx = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
-            document.getElementById('transactionTableBody').innerHTML = sortedTx.map(t => `
-                <tr>
-                    <td class="py-3 px-4 font-semibold">${t.date}</td>
-                    <td class="py-3 px-4 text-right font-bold text-blue-600">Rp ${t.total.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-center">
-                        ${isAdmin ? `<button onclick="deleteTx('${t.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button>` : '-'}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderClosingHistory() {
-            document.getElementById('closingTableBody').innerHTML = closingHistory.map(c => `
-                <tr class="bg-slate-50/50">
-                    <td class="py-3.5 px-4 font-bold text-slate-900">${c.period}</td>
-                    <td class="py-3.5 px-4 text-right">Rp ${c.targetSales.toLocaleString('id-ID')}</td>
-                    <td class="py-3.5 px-4 text-right font-bold text-blue-600">Rp ${c.actualSales.toLocaleString('id-ID')}</td>
-                    <td class="py-3.5 px-4 text-center font-bold text-blue-700">${c.acvPercent}%</td>
-                    <td class="py-3.5 px-4 text-center">${c.targetGM}%</td>
-                    <td class="py-3.5 px-4 text-center font-bold text-emerald-600">${c.actualGM}%</td>
-                    <td class="py-3.5 px-4 text-center">
-                        ${isAdmin ? `<button onclick="deleteClosing('${c.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button>` : '-'}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function deleteTx(id) {
-            if(confirm("Hapus sales harian ini?")) db.ref("transactions/" + id).remove();
-        }
-
-        function deleteClosing(id) {
-            if(confirm("Hapus arsip klosingan ini?")) db.ref("closings/" + id).remove();
-        }
-
-        function renderSalesChart() {
-            const sortedData = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
-            const labels = sortedData.map(t => t.date);
-            const salesData = sortedData.map(t => t.total);
+        function renderChart() {
             const ctx = document.getElementById('salesChart').getContext('2d');
             if(salesChart) salesChart.destroy();
             salesChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
-                    datasets: [{ label: 'Sales Harian (Rp)', data: salesData, borderColor: '#3b82f6', fill: false, tension: 0.3 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
+                    labels: transactions.map(t => t.date.slice(-2)),
+                    datasets: [{ label: 'Sales (Rp)', data: transactions.map(t => t.total), borderColor: '#3b82f6', tension: 0.3 }]
+                }
             });
         }
 
-        function generateAnalysisInsight() {
-            let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
-            let targetSales = storeTargets.targetSales;
-            let targetGM = storeTargets.targetGM;
-            let actualGMAvg = storeTargets.actualGMAvg;
-            let acvSales = targetSales > 0 ? ((totalSales / targetSales) * 100).toFixed(1) : 0;
-
-            let text = `<strong>Analisis Kinerja Toko Bulanan (Realtime DB):</strong><br>`;
-            text += `• Total penjualan berjalan saat ini <strong>Rp ${totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${acvSales}%</strong>).<br>`;
-            text += `• Rata-rata margin profit (GM%) toko Anda berjalan di angka <strong>${actualGMAvg}%</strong> dari target <strong>${targetGM}%</strong>.`;
-            document.getElementById('aiInsightText').innerHTML = text;
+        function toggleAccessMode() {
+            const pin = prompt("Masukkan PIN Admin:");
+            if(pin === "19012226") {
+                isAdmin = !isAdmin;
+                document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
+                document.getElementById('btnToggleMode').innerText = isAdmin ? "Keluar Admin" : "Masuk Admin";
+            } else { alert("PIN Salah!"); }
         }
 
-        // TRICK SINGLE FILE SERVICE WORKER: Skrip pendaftaran internal langsung aktif
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    self.addEventListener('install', e => self.skipWaiting());
-                    self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
-                `;
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl)
-                    .then(reg => console.log('Single File PWA Aktif Sempurna'))
-                    .catch(err => console.error(err));
+        function handleTransactionSubmit(e) {
+            e.preventDefault();
+            db.ref("transactions").push({date: document.getElementById('txDate').value, total: parseFloat(document.getElementById('txTotal').value)});
+        }
+
+        function handleUpdateTargets(e) {
+            e.preventDefault();
+            db.ref("store_config/targets").set({
+                targetSales: parseFloat(document.getElementById('targetSalesInput').value),
+                targetGM: parseFloat(document.getElementById('targetGMInput').value),
+                actualGMAvg: parseFloat(document.getElementById('actualGMInput').value)
             });
         }
 
-        window.onload = initFirebaseListeners;
+        window.onload = init;
     </script>
 </body>
 </html>
