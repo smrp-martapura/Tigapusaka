@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Toko Bulanan - CV. Tiga Pusako Borneo</title>
     
-    <!-- PWA MANIFEST INLINE (Mengubah nama instalasi menjadi CV TIGA PUSAKA) -->
-    <link rel="manifest" href="data:application/manifest+json,%7B%22short_name%22%3A%22CV%20TIGA%20PUSAKA%22%2C%22name%22%3A%22CV%20Tiga%20Pusako%20Borneo%22%2C%22start_url%22%3A%22.%2Findex.html%22%2C%22scope%22%3A%22%2FTigapusaka%2F%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F869%2F869636.png%22%2C%22type%22%3A%22image%22%2C%22sizes%22%3A%22512x512%22%7D%5D%7D">
+    <!-- PWA Link ke Manifest Eksternal -->
+    <link rel="manifest" href="manifest.json">
     
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -104,22 +104,6 @@
             <p id="aiInsightText" class="text-sm text-slate-700 leading-relaxed">
                 Menghubungkan ke Realtime Database...
             </p>
-        </div>
-
-        <!-- MANUAL INSTALLATION BUTTON (Jika browser tidak otomatis memunculkan pop-up) -->
-        <div id="installContainer" class="hidden mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-amber-500 text-white rounded-lg">
-                    <i class="fa-solid fa-mobile-screen-button text-lg"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-slate-900 text-sm">Pasang Aplikasi CV TIGA PUSAKA</h4>
-                    <p class="text-xs text-slate-500">Akses lebih cepat & praktis langsung dari layar utama HP Anda.</p>
-                </div>
-            </div>
-            <button id="btnInstall" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition">
-                Instal Sekarang
-            </button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -285,12 +269,12 @@
         
         let isAdmin = false;
         let salesChart = null;
-        let deferredPrompt;
 
-        // Listener Real-Time dari Firebase
+        // Listener Real-Time dari Firebase (Sinkronisasi otomatis ke semua perangkat)
         function initFirebaseListeners() {
             document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
 
+            // 1. Ambil Target & Parameter GM
             db.ref("store_config/targets").on("value", (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -304,6 +288,7 @@
                 updateUI();
             });
 
+            // 2. Ambil List Transaksi Harian berjalan
             db.ref("transactions").on("value", (snapshot) => {
                 transactions = [];
                 const data = snapshot.val();
@@ -319,6 +304,7 @@
                 updateUI();
             });
 
+            // 3. Ambil Arsip Klosing Bulanan
             db.ref("closings").on("value", (snapshot) => {
                 closingHistory = [];
                 const data = snapshot.val();
@@ -344,6 +330,7 @@
             generateAnalysisInsight();
         }
 
+        // --- SISTEM PEMBATAS AKSES ADMIN ---
         function toggleAccessMode() {
             if (isAdmin) {
                 isAdmin = false;
@@ -609,46 +596,12 @@
             document.getElementById('aiInsightText').innerHTML = text;
         }
 
-        // ==========================================
-        // FITUR SINKRONISASI PWA DENGAN ONLY 1 INDEX.HTML
-        // ==========================================
-        
-        // Pendaftaran service worker dengan CDN eksternal agar aman dan tidak perlu sw.js fisik lokal
+        // Pendaftaran Service Worker lokal dari repositori GitHub Anda
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Menggunakan CDN rawgit/jsdelivr untuk mengalirkan file Service Worker gratis
-                navigator.serviceWorker.register('https://cdn.jsdelivr.net/npm/pwacompat@2.0.17/pwacompat.min.js')
-                    .then(reg => console.log('Sistem PWA Online Aktif!'))
-                    .catch(err => {
-                        // fallback registrasi kosong untuk memicu instalasi browser lokal
-                        const blob = new Blob([
-                            `self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request)); });`
-                        ], { type: 'application/javascript' });
-                        navigator.serviceWorker.register(URL.createObjectURL(blob));
-                    });
-            });
-        }
-
-        // Tangkap trigger browser saat aplikasi siap diinstal
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // Tampilkan tombol instalasi rapi buatan kita di halaman utama
-            const container = document.getElementById('installContainer');
-            if(container) container.classList.remove('hidden');
-        });
-
-        // Event listener saat tombol instalasi di klik
-        const btnInstall = document.getElementById('btnInstall');
-        if(btnInstall) {
-            btnInstall.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`Pilihan user: ${outcome}`);
-                    deferredPrompt = null;
-                    document.getElementById('installContainer').classList.add('hidden');
-                }
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker Aktif Tempel'))
+                    .catch(err => console.error('Gagal:', err));
             });
         }
 
