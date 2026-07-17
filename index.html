@@ -6,7 +6,7 @@
     <title>Monitoring Toko Bulanan - CV. Tiga Pusako Borneo</title>
     
     <!-- TRICK SINGLE FILE PWA: Suntikan Manifest Langsung Tanpa File Eksternal -->
-    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22short_name%22%3A%22CV%20TIGA%20PUSAKA%22%2C%22name%22%3A%22CV%20Tiga%20Pusako%20Borneo%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F869%2F869636.png%22%2C%22type%22%3A%22image%252Fpng%22%2C%22sizes%22%3A%22512x512%22%7D%5D%7D">
+    <link class="pwa-manifest" rel="manifest" href="data:application/json;charset=utf-8,%7B%22short_name%22%3A%22CV%20TIGA%20PUSAKA%22%2C%22name%22%3A%22CV%20Tiga%20Pusako%20Borneo%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F869%2F869636.png%22%2C%22type%22%3A%22image%252Fpng%22%2C%22sizes%22%3A%22512x512%22%7D%5D%7D">
     
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -99,11 +99,11 @@
         <div class="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl">
             <div class="flex items-center space-x-2 mb-3">
                 <i class="fa-solid fa-chart-line text-blue-600 text-lg"></i>
-                <h3 class="font-bold text-slate-900 text-base">Analisis & Rekomendasi Profitabilitas Toko</h3>
+                <h3 class="font-bold text-slate-900 text-base">Analisis & Proyeksi Kinerja Toko</h3>
             </div>
-            <p id="aiInsightText" class="text-sm text-slate-700 leading-relaxed">
+            <div id="aiInsightText" class="text-sm text-slate-700 leading-relaxed space-y-2">
                 Menghubungkan ke Realtime Database...
-            </p>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -301,7 +301,7 @@
             renderTransactions();
             renderClosingHistory();
             renderSalesChart();
-            generateAnalysisInsight();
+            generateAnalysisInsight(); // Fungsi update terpasang di sini
         }
 
         function toggleAccessMode() {
@@ -373,6 +373,48 @@
             const tg = parseFloat(document.getElementById('targetGMInput').value);
             const ag = parseFloat(document.getElementById('actualGMInput').value) || 0;
             db.ref("store_config/targets").set({ targetSales: ts, targetGM: tg, actualGMAvg: ag });
+        }
+
+        function triggerClosing() {
+            if (!isAdmin) {
+                alert("Akses ditolak. Anda harus masuk sebagai Admin.");
+                return;
+            }
+            if (transactions.length === 0) {
+                alert("Tidak ada data transaksi berjalan bulan ini untuk diklosing.");
+                return;
+            }
+
+            const sortedTx = [...transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
+            const referenceDate = new Date(sortedTx[sortedTx.length - 1].date);
+            const options = { year: 'numeric', month: 'long' };
+            const defaultPeriod = referenceDate.toLocaleDateString('id-ID', options);
+
+            const periodName = prompt("Masukkan Periode Bulan untuk Klosing ini:", defaultPeriod);
+            if (!periodName) return;
+
+            if (confirm(`Apakah Anda yakin ingin melakukan KLOSING untuk periode: ${periodName}?\n\nSemua transaksi harian saat ini akan diarsipkan ke log bulanan dan dibersihkan dari database berjalan.`)) {
+                let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
+                let targetSales = storeTargets.targetSales;
+                let targetGM = storeTargets.targetGM;
+                let actualGMAvg = storeTargets.actualGMAvg;
+                let acvSales = targetSales > 0 ? Math.round((totalSales / targetSales) * 100) : 0;
+
+                const closingPayload = {
+                    period: periodName,
+                    targetSales: targetSales,
+                    actualSales: totalSales,
+                    acvPercent: acvSales,
+                    targetGM: targetGM,
+                    actualGM: actualGMAvg,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                db.ref("closings").push(closingPayload)
+                    .then(() => db.ref("transactions").set(null))
+                    .then(() => alert(`Klosing sukses! Data periode ${periodName} berhasil diarsipkan.`))
+                    .catch((err) => alert("Gagal melakukan klosing: " + err.message));
+            }
         }
 
         function renderProgressBars() {
@@ -458,6 +500,9 @@
             });
         }
 
+        // =========================================================
+        // FUNGSI ANALISIS BARU DENGAN PROYEKSI & FORECASTING
+        // =========================================================
         function generateAnalysisInsight() {
             let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
             let targetSales = storeTargets.targetSales;
@@ -465,9 +510,63 @@
             let actualGMAvg = storeTargets.actualGMAvg;
             let acvSales = targetSales > 0 ? ((totalSales / targetSales) * 100).toFixed(1) : 0;
 
-            let text = `<strong>Analisis Kinerja Toko Bulanan (Realtime DB):</strong><br>`;
-            text += `• Total penjualan berjalan saat ini <strong>Rp ${totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${acvSales}%</strong>).<br>`;
-            text += `• Rata-rata margin profit (GM%) toko Anda berjalan di angka <strong>${actualGMAvg}%</strong> dari target <strong>${targetGM}%</strong>.`;
+            // 1. Tentukan tanggal patokan untuk mengetahui jumlah hari dalam bulan ini
+            let baseDate = new Date();
+            if (transactions.length > 0) {
+                // Ambil tanggal transaksi terakhir jika ada
+                const sortedTx = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
+                baseDate = new Date(sortedTx[0].date);
+            }
+            
+            // Hitung total hari di bulan berjalan, hari terlewati, dan sisa hari
+            let totalDaysInMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate();
+            let passedDays = baseDate.getDate();
+            let remainingDays = totalDaysInMonth - passedDays;
+            if (remainingDays <= 0) remainingDays = 1; // Cegah pembagian dengan 0 jika di akhir bulan
+
+            let avgSales = transactions.length > 0 ? (totalSales / transactions.length) : 0;
+
+            // 2. Kalkulasi Forecast (Proyeksi)
+            // Perkiraan sales akhir bulan = rata-rata sales * total hari dalam sebulan
+            let estimatedEndMonthSales = avgSales * totalDaysInMonth;
+            
+            // Sisa target yang harus dikejar
+            let remainingTargetSales = Math.max(0, targetSales - totalSales);
+            let requiredDailySales = remainingTargetSales > 0 ? (remainingTargetSales / remainingDays) : 0;
+            
+            // Perkiraan GM Rupiah Akhir Bulan = (Rata-rata sales harian * jumlah hari) * GM%
+            let estimatedEndMonthGM = (avgSales * totalDaysInMonth) * (actualGMAvg / 100);
+
+            // 3. Render ke HTML
+            let text = `
+                <div class="mb-3">
+                    <p>• Penjualan berjalan saat ini: <strong>Rp ${totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${acvSales}%</strong>).</p>
+                    <p>• Rata-rata margin profit (GM%): <strong>${actualGMAvg}%</strong> (Target: <strong>${targetGM}%</strong>).</p>
+                </div>
+                
+                <div class="p-3 bg-white border border-blue-100 rounded-xl shadow-sm space-y-2">
+                    <h4 class="font-bold text-blue-800 text-xs uppercase mb-2 border-b border-blue-50 pb-1">📈 Proyeksi Akhir Bulan (${totalDaysInMonth} Hari)</h4>
+                    
+                    <p class="text-sm">• <strong>Estimasi Sales Akhir:</strong> Rp ${Math.round(estimatedEndMonthSales).toLocaleString('id-ID')}</p>
+                    <p class="text-sm">• <strong>Estimasi Rupiah GM:</strong> <span class="text-emerald-600 font-bold">Rp ${Math.round(estimatedEndMonthGM).toLocaleString('id-ID')}</span></p>
+            `;
+
+            if (remainingTargetSales > 0) {
+                text += `
+                    <div class="mt-2 pt-2 border-t border-blue-50">
+                        <p class="text-sm text-red-600">🎯 <strong>Sisa Target Bulanan:</strong> Rp ${remainingTargetSales.toLocaleString('id-ID')}</p>
+                        <p class="text-xs text-slate-500 mt-1">Guna mencapai target bulan ini, toko perlu mengejar omset rata-rata <strong>Rp ${Math.round(requiredDailySales).toLocaleString('id-ID')} / hari</strong> di sisa ${remainingDays} hari ke depan.</p>
+                    </div>
+                `;
+            } else {
+                text += `
+                    <div class="mt-2 pt-2 border-t border-blue-50">
+                        <p class="text-sm text-emerald-600 font-bold">🎉 Luar biasa! Target Sales Bulanan telah TERCAPAI!</p>
+                    </div>
+                `;
+            }
+
+            text += `</div>`;
             document.getElementById('aiInsightText').innerHTML = text;
         }
 
