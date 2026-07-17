@@ -97,9 +97,20 @@
 
         <!-- ANALYTICS INSIGHTS BOARD -->
         <div class="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl">
-            <div class="flex items-center space-x-2 mb-3">
-                <i class="fa-solid fa-chart-line text-blue-600 text-lg"></i>
-                <h3 class="font-bold text-slate-900 text-base">Analisis & Proyeksi Kinerja Toko</h3>
+            <div class="flex items-center justify-between mb-3 border-b border-blue-100 pb-2 flex-wrap gap-2">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-line text-blue-600 text-lg"></i>
+                    <h3 class="font-bold text-slate-900 text-base">Analisis & Proyeksi Kinerja Toko</h3>
+                </div>
+                <!-- Tombol aksi salin & share -->
+                <div class="flex space-x-2">
+                    <button onclick="copyReportToClipboard()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-copy text-blue-600"></i> Salin Laporan
+                    </button>
+                    <button onclick="shareToWhatsApp()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                        <i class="fa-brands fa-whatsapp text-lg"></i> Bagikan ke WA
+                    </button>
+                </div>
             </div>
             <div id="aiInsightText" class="text-sm text-slate-700 leading-relaxed space-y-2">
                 Menghubungkan ke Realtime Database...
@@ -301,7 +312,7 @@
             renderTransactions();
             renderClosingHistory();
             renderSalesChart();
-            generateAnalysisInsight(); // Fungsi update terpasang di sini
+            generateAnalysisInsight();
         }
 
         function toggleAccessMode() {
@@ -501,61 +512,75 @@
         }
 
         // =========================================================
-        // FUNGSI ANALISIS BARU DENGAN PROYEKSI & FORECASTING
+        // FUNGSI UTK PEMBUATAN STRUKTUR TEKS LAPORAN (WA & COPY)
         // =========================================================
-        function generateAnalysisInsight() {
+        function buildReportData() {
             let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
             let targetSales = storeTargets.targetSales;
             let targetGM = storeTargets.targetGM;
             let actualGMAvg = storeTargets.actualGMAvg;
             let acvSales = targetSales > 0 ? ((totalSales / targetSales) * 100).toFixed(1) : 0;
 
-            // 1. Tentukan tanggal patokan untuk mengetahui jumlah hari dalam bulan ini
             let baseDate = new Date();
             if (transactions.length > 0) {
-                // Ambil tanggal transaksi terakhir jika ada
                 const sortedTx = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
                 baseDate = new Date(sortedTx[0].date);
             }
             
-            // Hitung total hari di bulan berjalan, hari terlewati, dan sisa hari
             let totalDaysInMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate();
             let passedDays = baseDate.getDate();
-            let remainingDays = totalDaysInMonth - passedDays;
-            if (remainingDays <= 0) remainingDays = 1; // Cegah pembagian dengan 0 jika di akhir bulan
-
+            let remainingDays = Math.max(1, totalDaysInMonth - passedDays);
             let avgSales = transactions.length > 0 ? (totalSales / transactions.length) : 0;
 
-            // 2. Kalkulasi Forecast (Proyeksi)
-            // Perkiraan sales akhir bulan = rata-rata sales * total hari dalam sebulan
             let estimatedEndMonthSales = avgSales * totalDaysInMonth;
-            
-            // Sisa target yang harus dikejar
             let remainingTargetSales = Math.max(0, targetSales - totalSales);
             let requiredDailySales = remainingTargetSales > 0 ? (remainingTargetSales / remainingDays) : 0;
-            
-            // Perkiraan GM Rupiah Akhir Bulan = (Rata-rata sales harian * jumlah hari) * GM%
             let estimatedEndMonthGM = (avgSales * totalDaysInMonth) * (actualGMAvg / 100);
 
-            // 3. Render ke HTML
+            const formatMonth = baseDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+            return {
+                formatMonth,
+                totalSales,
+                targetSales,
+                acvSales,
+                actualGMAvg,
+                targetGM,
+                totalDaysInMonth,
+                passedDays,
+                remainingDays,
+                avgSales,
+                estimatedEndMonthSales,
+                remainingTargetSales,
+                requiredDailySales,
+                estimatedEndMonthGM
+            };
+        }
+
+        // =========================================================
+        // FUNGSI ANALISIS DENGAN PROYEKSI & FORECASTING
+        // =========================================================
+        function generateAnalysisInsight() {
+            const r = buildReportData();
+
             let text = `
                 <div class="mb-3">
-                    <p>• Penjualan berjalan saat ini: <strong>Rp ${totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${acvSales}%</strong>).</p>
-                    <p>• Rata-rata margin profit (GM%): <strong>${actualGMAvg}%</strong> (Target: <strong>${targetGM}%</strong>).</p>
+                    <p>• Penjualan berjalan saat ini: <strong>Rp ${r.totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${r.acvSales}%</strong>).</p>
+                    <p>• Rata-rata margin profit (GM%): <strong>${r.actualGMAvg}%</strong> (Target: <strong>${r.targetGM}%</strong>).</p>
                 </div>
                 
                 <div class="p-3 bg-white border border-blue-100 rounded-xl shadow-sm space-y-2">
-                    <h4 class="font-bold text-blue-800 text-xs uppercase mb-2 border-b border-blue-50 pb-1">📈 Proyeksi Akhir Bulan (${totalDaysInMonth} Hari)</h4>
+                    <h4 class="font-bold text-blue-800 text-xs uppercase mb-2 border-b border-blue-50 pb-1">📈 Proyeksi Akhir Bulan (${r.totalDaysInMonth} Hari)</h4>
                     
-                    <p class="text-sm">• <strong>Estimasi Sales Akhir:</strong> Rp ${Math.round(estimatedEndMonthSales).toLocaleString('id-ID')}</p>
-                    <p class="text-sm">• <strong>Estimasi Rupiah GM:</strong> <span class="text-emerald-600 font-bold">Rp ${Math.round(estimatedEndMonthGM).toLocaleString('id-ID')}</span></p>
+                    <p class="text-sm">• <strong>Estimasi Sales Akhir:</strong> Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}</p>
+                    <p class="text-sm">• <strong>Estimasi Rupiah GM:</strong> <span class="text-emerald-600 font-bold">Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}</span></p>
             `;
 
-            if (remainingTargetSales > 0) {
+            if (r.remainingTargetSales > 0) {
                 text += `
                     <div class="mt-2 pt-2 border-t border-blue-50">
-                        <p class="text-sm text-red-600">🎯 <strong>Sisa Target Bulanan:</strong> Rp ${remainingTargetSales.toLocaleString('id-ID')}</p>
-                        <p class="text-xs text-slate-500 mt-1">Guna mencapai target bulan ini, toko perlu mengejar omset rata-rata <strong>Rp ${Math.round(requiredDailySales).toLocaleString('id-ID')} / hari</strong> di sisa ${remainingDays} hari ke depan.</p>
+                        <p class="text-sm text-red-600">🎯 <strong>Sisa Target Bulanan:</strong> Rp ${r.remainingTargetSales.toLocaleString('id-ID')}</p>
+                        <p class="text-xs text-slate-500 mt-1">Guna mencapai target bulan ini, toko perlu mengejar omset rata-rata <strong>Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari</strong> di sisa ${r.remainingDays} hari ke depan.</p>
                     </div>
                 `;
             } else {
@@ -568,6 +593,53 @@
 
             text += `</div>`;
             document.getElementById('aiInsightText').innerHTML = text;
+        }
+
+        // =========================================================
+        // AKSI COPY REPORT & WHATSAPP SHARE
+        // =========================================================
+        function generateReportTextMessage() {
+            const r = buildReportData();
+            
+            let msg = `*LAPORAN KINERJA TOKO - CV. TIGA PUSAKO BORNEO*\n`;
+            msg += `Periode: *${r.formatMonth}*\n`;
+            msg += `-----------------------------------------------\n\n`;
+            msg += `*1. REALISASI BERJALAN:*\n`;
+            msg += `• Total Sales Toko (Actual): Rp ${r.totalSales.toLocaleString('id-ID')}\n`;
+            msg += `• Target Sales Bulanan: Rp ${r.targetSales.toLocaleString('id-ID')}\n`;
+            msg += `• Pencapaian (ACV Sales): *${r.acvSales}%*\n`;
+            msg += `• Rata-rata Sales Harian: Rp ${Math.round(r.avgSales).toLocaleString('id-ID')}\n`;
+            msg += `• Actual GM% (Avg): *${r.actualGMAvg}%* (Target: ${r.targetGM}%)\n\n`;
+            
+            msg += `*2. PROYEKSI AKHIR BULAN (${r.totalDaysInMonth} Hari):*\n`;
+            msg += `• Estimasi Sales Akhir: *Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}*\n`;
+            msg += `• Estimasi Rupiah GM: *Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}*\n\n`;
+            
+            msg += `*3. ANALISIS TARGET SISA HARI:*\n`;
+            if (r.remainingTargetSales > 0) {
+                msg += `• Sisa Target Bulanan: Rp ${r.remainingTargetSales.toLocaleString('id-ID')}\n`;
+                msg += `• Sisa Waktu Bulan Ini: *${r.remainingDays} Hari*\n`;
+                msg += `• Target Wajib Harian: *Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari*\n`;
+            } else {
+                msg += `• *🎉 TARGET BULANAN TELAH TERCAPAI!*\n`;
+            }
+            
+            return msg;
+        }
+
+        function copyReportToClipboard() {
+            const reportText = generateReportTextMessage();
+            navigator.clipboard.writeText(reportText).then(() => {
+                alert("Laporan berhasil disalin ke clipboard!");
+            }).catch(err => {
+                alert("Gagal menyalin teks: " + err);
+            });
+        }
+
+        function shareToWhatsApp() {
+            const reportText = encodeURIComponent(generateReportTextMessage());
+            const waUrl = `https://api.whatsapp.com/send?text=${reportText}`;
+            window.open(waUrl, '_blank');
         }
 
         // TRICK SINGLE FILE SERVICE WORKER: Skrip pendaftaran internal langsung aktif
