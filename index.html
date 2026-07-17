@@ -121,8 +121,11 @@
             
             <!-- PANEL KIRI (INPUT ADMIN) -->
             <div id="adminPanel" class="lg:col-span-1 space-y-6 hidden">
+                <!-- FORM 1: INPUT SALES HARIAN -->
                 <div class="bg-white p-6 rounded-2xl border border-blue-200 shadow-lg">
-                    <h3 class="font-bold text-slate-900 text-lg mb-4">Input Sales Harian</h3>
+                    <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-day text-blue-600"></i> Input Sales Harian
+                    </h3>
                     <form id="salesForm" onsubmit="handleTransactionSubmit(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tanggal Transaksi</label>
@@ -133,6 +136,41 @@
                             <input type="number" id="txTotal" required placeholder="Contoh: 3500000" class="w-full px-3 py-2 border rounded-xl text-sm font-semibold">
                         </div>
                         <button type="submit" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl text-sm hover:bg-blue-700">Simpan Sales Harian</button>
+                    </form>
+                </div>
+
+                <!-- FORM BARU: INPUT SALES REKAP BULANAN (HISTORIS) -->
+                <div class="bg-white p-6 rounded-2xl border border-violet-200 shadow-lg">
+                    <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-box-archive text-violet-600"></i> Input Data Bulanan (Histori)
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-3">Gunakan form ini untuk langsung menginput arsip laporan bulan lalu (Januari - sekarang) tanpa harus memasukkan data harian.</p>
+                    <form id="monthlyHistoryForm" onsubmit="handleMonthlyHistorySubmit(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Nama Bulan / Periode</label>
+                            <input type="text" id="histPeriod" required placeholder="Contoh: Januari 2026" class="w-full px-3 py-2 border rounded-xl text-sm">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Target Sales (Rp)</label>
+                                <input type="number" id="histTargetSales" required placeholder="45000000" class="w-full px-3 py-2 border rounded-xl text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Actual Sales (Rp)</label>
+                                <input type="number" id="histActualSales" required placeholder="46500000" class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-blue-700">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Target GM (%)</label>
+                                <input type="number" id="histTargetGM" step="0.1" min="0" max="100" required placeholder="20" class="w-full px-3 py-2 border rounded-xl text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Actual GM Avg (%)</label>
+                                <input type="number" id="histActualGM" step="0.1" min="0" max="100" required placeholder="18.5" class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-emerald-700">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-2.5 bg-violet-600 text-white font-semibold rounded-xl text-xs hover:bg-violet-700">Simpan Arsip Bulanan</button>
                     </form>
                 </div>
 
@@ -375,6 +413,34 @@
             const date = document.getElementById('txDate').value;
             db.ref("transactions").push({ date: date, total: total }).then(() => {
                 document.getElementById('txTotal').value = '';
+            });
+        }
+
+        // FUNGSI SUBMIT DATA HISTORI BULANAN MANUAL
+        function handleMonthlyHistorySubmit(e) {
+            e.preventDefault();
+            const period = document.getElementById('histPeriod').value;
+            const targetSales = parseFloat(document.getElementById('histTargetSales').value);
+            const actualSales = parseFloat(document.getElementById('histActualSales').value);
+            const targetGM = parseFloat(document.getElementById('histTargetGM').value);
+            const actualGM = parseFloat(document.getElementById('histActualGM').value);
+            const acvPercent = targetSales > 0 ? Math.round((actualSales / targetSales) * 100) : 0;
+
+            const payload = {
+                period: period,
+                targetSales: targetSales,
+                actualSales: actualSales,
+                acvPercent: acvPercent,
+                targetGM: targetGM,
+                actualGM: actualGM,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            db.ref("closings").push(payload).then(() => {
+                alert(`Data bulanan untuk "${period}" berhasil ditambahkan ke arsip!`);
+                document.getElementById('monthlyHistoryForm').reset();
+            }).catch(err => {
+                alert("Gagal menyimpan data histori: " + err.message);
             });
         }
 
