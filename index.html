@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Toko Bulanan - CV. Tiga Pusako Borneo</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,7 +34,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-slate-950 tracking-tight leading-tight">CV. Tiga Pusako Borneo</h1>
-                    <p class="text-xs text-slate-400 font-medium">Martapura | Monthly Store Performance</p>
+                    <p class="text-xs text-slate-400 font-medium">Martapura | Performance Bulanan</p>
                 </div>
             </div>
             
@@ -275,7 +283,6 @@
                     document.getElementById('targetGMInput').value = storeTargets.targetGM;
                     document.getElementById('actualGMInput').value = storeTargets.actualGMAvg;
                 } else {
-                    // Jika data config kosong, set default-nya
                     db.ref("store_config/targets").set(storeTargets);
                 }
                 updateUI();
@@ -308,7 +315,6 @@
                             ...data[key]
                         });
                     });
-                    // Urutkan klosingan terbaru paling atas berdasarkan timestamp
                     closingHistory.sort((a, b) => b.timestamp - a.timestamp);
                 }
                 updateUI();
@@ -383,7 +389,6 @@
             document.getElementById('remainingTargetGM').innerText = gapGM > 0 ? "Kurang " + gapGM.toFixed(1) + "%" : "Target Tercapai";
         }
 
-        // Simpan transaksi baru langsung ke Realtime Database
         function handleTransactionSubmit(e) {
             e.preventDefault();
             const total = parseFloat(document.getElementById('txTotal').value);
@@ -400,7 +405,6 @@
             });
         }
 
-        // Update target ke Realtime Database
         function handleUpdateTargets(e) {
             e.preventDefault();
             const ts = parseFloat(document.getElementById('targetSalesInput').value);
@@ -418,7 +422,6 @@
             });
         }
 
-        // Klosing Bulanan 
         async function triggerClosing() {
             if (transactions.length === 0) {
                 alert("Tidak ada transaksi harian bulan ini untuk diklosing.");
@@ -441,7 +444,6 @@
             let acvPercent = targetSales > 0 ? Math.round((totalSales / targetSales) * 100) : 0;
 
             try {
-                // 1. Kirim data klosing ke Realtime Database
                 await db.ref("closings").push({
                     period: currentMonth,
                     targetSales: targetSales,
@@ -452,9 +454,7 @@
                     timestamp: Date.now()
                 });
 
-                // 2. Kosongkan data transaksi harian di Realtime Database
                 await db.ref("transactions").remove();
-
                 alert(`Sukses! Data bulan ${currentMonth} telah resmi diarsipkan.`);
             } catch (err) {
                 alert("Terjadi kesalahan sistem saat klosing: " + err.message);
@@ -522,7 +522,6 @@
             `).join('');
         }
 
-        // Hapus transaksi berjalan
         function deleteTx(id) {
             if(confirm("Hapus pencatatan sales harian ini dari database cloud?")) {
                 db.ref("transactions/" + id).remove().then(() => {
@@ -531,7 +530,6 @@
             }
         }
 
-        // Hapus arsip klosing
         function deleteClosing(id) {
             if(confirm("Hapus arsip klosingan ini secara permanen dari database cloud?")) {
                 db.ref("closings/" + id).remove().then(() => {
@@ -585,20 +583,28 @@
             let acvSales = targetSales > 0 ? ((totalSales / targetSales) * 100).toFixed(1) : 0;
 
             let text = ` <strong>Analisis Kinerja Toko Bulanan (Realtime DB Aktif):</strong><br>`;
-            text += `• Total penjualan berjalan saat ini <strong>Rp ${totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${acvSales}%</strong>).<br>`;
-            text += `• Rata-rata margin profit (GM%) Anda bulan ini diset di angka <strong>${actualGMAvg}%</strong> dari target <strong>${targetGM}%</strong>.<br><br>`;
+            text += `鈥� Total penjualan berjalan saat ini <strong>Rp ${totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${acvSales}%</strong>).<br>`;
+            text += `鈥� Rata-rata margin profit (GM%) Anda bulan ini diset di angka <strong>${actualGMAvg}%</strong> dari target <strong>${targetGM}%</strong>.<br><br>`;
             
             if (actualGMAvg < targetGM) {
                 let gap = (targetGM - actualGMAvg).toFixed(1);
-                text += `⚠️ <strong>Peringatan Margin:</strong> Rata-rata GM% aktual toko Anda berjalan <strong>${gap}%</strong> di bawah target.`;
+                text += `鈿狅笍 <strong>Peringatan Margin:</strong> Rata-rata GM% aktual toko Anda berjalan <strong>${gap}%</strong> di bawah target.`;
             } else {
-                text += `🎉 <strong>Performa Bagus:</strong> Rata-rata GM% aktual aman terkendali di atas target (surplus <strong>${(actualGMAvg - targetGM).toFixed(1)}%</strong>).`;
+                text += `馃帀 <strong>Performa Bagus:</strong> Rata-rata GM% aktual aman terkendali di atas target (surplus <strong>${(actualGMAvg - targetGM).toFixed(1)}%</strong>).`;
             }
 
             document.getElementById('aiInsightText').innerHTML = text;
         }
 
-        // Mulai listener Cloud Firebase Realtime Database saat file dibuka
+        // Pendaftaran Service Worker untuk fitur install PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker terdaftar!', reg))
+                    .catch(err => console.error('Gagal mendaftarkan Service Worker:', err));
+            });
+        }
+
         window.onload = initFirebaseListeners;
     </script>
 </body>
