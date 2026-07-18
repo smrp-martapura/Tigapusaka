@@ -110,9 +110,7 @@
                 </div>
             </div>
             <div id="aiInsightText" class="text-sm text-slate-700 leading-relaxed space-y-2">
-                <div class="flex items-center gap-2 text-blue-600 font-medium">
-                    <i class="fa-solid fa-circle-notch animate-spin"></i> Menghubungkan ke Realtime Database...
-                </div>
+                Menghubungkan ke Realtime Database...
             </div>
         </div>
 
@@ -285,6 +283,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <script>
+        // CONFIG PARSING LENGKAP & UTUH
         const firebaseConfig = {
             apiKey: "AIzaSyC0vc5NmxqXAmR7FGQIRqX-NcknIuCZpIU",
             authDomain: "tiga-pusaka.firebaseapp.com",
@@ -302,42 +301,15 @@
         let closingHistory = [];
         let isAdmin = false;
         let salesChart = null;
-        let isConnected = false;
 
         function initFirebaseListeners() {
-            console.log("Memulai inisialisasi Firebase...");
             document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
-
-            // Proteksi Batas Waktu Koneksi (Timeout 6 Detik)
-            setTimeout(() => {
-                if (!isConnected) {
-                    console.warn("Koneksi Firebase melampaui batas waktu 6 detik.");
-                    document.getElementById('aiInsightText').innerHTML = `
-                        <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-start gap-2">
-                            <i class="fa-solid fa-triangle-exclamation text-base mt-0.5"></i>
-                            <div>
-                                <strong class="block mb-0.5">Koneksi Awan Lambat / Terputus</strong>
-                                Database sedang sibuk atau browser Anda memblokir koneksi websocket. Mencoba memuat ulang data tersempan lokal...
-                            </div>
-                        </div>
-                    `;
-                    updateUI(); // Paksa render layar agar dashboard tidak kosong total
-                }
-            }, 6000);
 
             try {
                 if (!firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
                 }
                 db = firebase.database();
-
-                // Tes Ping Koneksi
-                db.ref(".info/connected").on("value", (snap) => {
-                    if (snap.val() === true) {
-                        isConnected = true;
-                        console.log("Firebase Terhubung Sukses!");
-                    }
-                });
 
                 db.ref("store_config/targets").on("value", (snapshot) => {
                     const data = snapshot.val();
@@ -348,8 +320,6 @@
                         document.getElementById('actualGMInput').value = storeTargets.actualGMAvg;
                     }
                     updateUI();
-                }, (error) => {
-                    console.error("Gagal membaca targets:", error);
                 });
 
                 db.ref("transactions").on("value", (snapshot) => {
@@ -361,8 +331,6 @@
                         });
                     }
                     updateUI();
-                }, (error) => {
-                    console.error("Gagal membaca transaksi:", error);
                 });
 
                 db.ref("closings").on("value", (snapshot) => {
@@ -375,13 +343,11 @@
                         closingHistory.sort((a, b) => b.timestamp - a.timestamp);
                     }
                     updateUI();
-                }, (error) => {
-                    console.error("Gagal membaca arsip:", error);
                 });
 
             } catch (err) {
-                console.error("Kesalahan Utama Inisialisasi:", err);
-                document.getElementById('aiInsightText').innerHTML = `<p class="text-red-500 font-bold text-xs">Eror Inisialisasi: ${err.message}</p>`;
+                console.error(err);
+                document.getElementById('aiInsightText').innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
             }
         }
 
@@ -394,7 +360,7 @@
                 renderSalesChart();
                 generateAnalysisInsight();
             } catch (err) {
-                console.error("UI Render Error: ", err);
+                console.error(err);
             }
         }
 
@@ -470,7 +436,7 @@
             const actualGM = parseFloat(document.getElementById('histActualGM').value);
             const acvPercent = targetSales > 0 ? Math.round((actualSales / targetSales) * 100) : 0;
 
-            const payload = {
+            db.ref("closings").push({
                 period: period,
                 targetSales: targetSales,
                 actualSales: actualSales,
@@ -478,13 +444,9 @@
                 targetGM: targetGM,
                 actualGM: actualGM,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            db.ref("closings").push(payload).then(() => {
-                alert(`Data bulanan untuk "${period}" berhasil disimpan!`);
+            }).then(() => {
+                alert("Data histori bulanan berhasil disimpan!");
                 document.getElementById('monthlyHistoryForm').reset();
-            }).catch(err => {
-                alert("Gagal menyimpan data histori: " + err.message);
             });
         }
 
@@ -496,9 +458,7 @@
                     return dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
                 }
                 return dateString;
-            } catch (e) {
-                return dateString;
-            }
+            } catch (e) { return dateString; }
         }
 
         function handleUpdateTargets(e) {
@@ -510,19 +470,12 @@
         }
 
         function triggerClosing() {
-            if (!isAdmin) {
-                alert("Akses ditolak. Anda harus masuk sebagai Admin.");
-                return;
-            }
-            if (transactions.length === 0) {
-                alert("Tidak ada data transaksi berjalan bulan ini untuk diklosing.");
-                return;
-            }
+            if (!isAdmin) return alert("Akses ditolak.");
+            if (transactions.length === 0) return alert("Tidak ada data transaksi berjalan.");
 
             const sortedTx = [...transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
             const referenceDate = new Date(sortedTx[sortedTx.length - 1].date);
-            const options = { year: 'numeric', month: 'long' };
-            const defaultPeriod = referenceDate.toLocaleDateString('id-ID', options);
+            const defaultPeriod = referenceDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
 
             const periodName = prompt("Masukkan Periode Bulan untuk Klosing ini:", defaultPeriod);
             if (!periodName) return;
@@ -534,7 +487,7 @@
                 let actualGMAvg = storeTargets.actualGMAvg;
                 let acvSales = targetSales > 0 ? Math.round((totalSales / targetSales) * 100) : 0;
 
-                const closingPayload = {
+                db.ref("closings").push({
                     period: periodName,
                     targetSales: targetSales,
                     actualSales: totalSales,
@@ -542,12 +495,10 @@
                     targetGM: targetGM,
                     actualGM: actualGMAvg,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
-                };
-
-                db.ref("closings").push(closingPayload)
-                    .then(() => db.ref("transactions").set(null))
-                    .then(() => alert(`Klosing sukses! Data periode ${periodName} berhasil diarsipkan.`))
-                    .catch((err) => alert("Gagal melakukan klosing: " + err.message));
+                })
+                .then(() => db.ref("transactions").set(null))
+                .then(() => alert(`Klosing sukses untuk periode ${periodName}`))
+                .catch((err) => alert("Gagal klosing: " + err.message));
             }
         }
 
@@ -641,7 +592,7 @@
             let actualGMAvg = storeTargets.actualGMAvg || 0;
             let acvSales = targetSales > 0 ? ((totalSales / targetSales) * 100).toFixed(1) : 0;
 
-            let baseDate = new Date(); 
+            let baseDate = new Date();
             if (transactions.length > 0) {
                 const sortedTx = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
                 baseDate = new Date(sortedTx[0].date);
@@ -649,21 +600,17 @@
             
             let totalDaysInMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate();
             let passedDays = baseDate.getDate();
-            
-            if (passedDays > totalDaysInMonth) passedDays = totalDaysInMonth; 
+            if (passedDays > totalDaysInMonth) passedDays = totalDaysInMonth;
             
             let remainingDays = Math.max(1, totalDaysInMonth - passedDays);
             let avgSales = transactions.length > 0 ? (totalSales / transactions.length) : 0;
-
             let constantDailyTarget = targetSales / totalDaysInMonth;
             let shouldBeTargetToday = constantDailyTarget * passedDays;
             let gapToday = totalSales - shouldBeTargetToday;
-
             let estimatedEndMonthSales = avgSales * totalDaysInMonth;
             let remainingTargetSales = Math.max(0, targetSales - totalSales);
             let requiredDailySales = remainingTargetSales / remainingDays;
             let estimatedEndMonthGM = estimatedEndMonthSales * (actualGMAvg / 100);
-
             const formatMonth = baseDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 
             return {
@@ -675,8 +622,8 @@
         }
 
         function generateAnalysisInsight() {
-            // Jika koneksi internet putus dan data kosong, tampilkan peringatan
-            if(transactions.length === 0 && !isConnected) {
+            if(transactions.length === 0) {
+                document.getElementById('aiInsightText').innerHTML = `<p class="text-slate-500 text-xs">Belum ada transaksi di bulan ini.</p>`;
                 return;
             }
 
@@ -719,28 +666,65 @@
             document.getElementById('aiInsightText').innerHTML = text;
         }
 
+        // FUNGSI UPDATE UTAMA: MENAMBAHKAN ANALISIS DAN DETAIL SALES HARIAN KE TEXT WHATSAPP
         function generateReportTextMessage() {
             const r = buildReportData();
-            let msg = `*LAPORAN KINERJA TOKO - CV. TIGA PUSAKO BORNEO*\nPeriode: *${r.formatMonth}*\n-----------------------------------------------\n\n`;
-            msg += `*1. RINGKASAN REKAPITULASI BULANAN:*\n• Total Sales Toko (Actual): *Rp ${r.totalSales.toLocaleString('id-ID')}*\n• Target Sales Bulanan: Rp ${r.targetSales.toLocaleString('id-ID')}\n• Pencapaian (ACV Sales): *${r.acvSales}%*\n\n`;
-            msg += `*2. PROYEKSI AKHIR BULAN (${r.totalDaysInMonth} Hari):*\n• Estimasi Sales Akhir: *Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}*\n• Estimasi Rupiah GM: *Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}*`;
+            
+            let statusGap = r.gapToday >= 0 
+                ? `SURPLUS (+Rp ${Math.round(r.gapToday).toLocaleString('id-ID')})` 
+                : `DEFISIT (-Rp ${Math.abs(Math.round(r.gapToday)).toLocaleString('id-ID')})`;
+
+            let msg = `*LAPORAN KINERJA TOKO - CV. TIGA PUSAKO BORNEO*\n`;
+            msg += `Periode: *${r.formatMonth}*\n`;
+            msg += `-----------------------------------------------\n\n`;
+            
+            msg += `*1. INDICATOR UTAMA & ACV:*\n`;
+            msg += `• Total Sales Berjalan: *Rp ${r.totalSales.toLocaleString('id-ID')}*\n`;
+            msg += `• Target Sales Bulanan: Rp ${r.targetSales.toLocaleString('id-ID')}\n`;
+            msg += `• Pencapaian (ACV Sales): *${r.acvSales}%*\n`;
+            msg += `• Profit Margin (GM%): *${r.actualGMAvg}%* (Target: ${r.targetGM}%)\n\n`;
+            
+            msg += `*2. ANALISIS KINERJA BERJALAN (Hari ke-${r.passedDays}):*\n`;
+            msg += `• Rata-rata Sales / Hari: Rp ${Math.round(r.avgSales).toLocaleString('id-ID')}\n`;
+            msg += `• Target Ideal S/D Hari Ini: Rp ${Math.round(r.shouldBeTargetToday).toLocaleString('id-ID')}\n`;
+            msg += `• Status Kumulatif Hari Ini: *${statusGap}*\n\n`;
+
+            msg += `*3. PROYEKSI & ESTIMASI AKHIR BULAN:*\n`;
+            msg += `• Proyeksi Omset Akhir Bulan: *Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}*\n`;
+            msg += `• Estimasi Profit Kotor (Rp GM): *Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}*\n`;
+            
+            if (r.remainingTargetSales > 0) {
+                msg += `• Sisa Target Yang Harus Dicari: Rp ${r.remainingTargetSales.toLocaleString('id-ID')}\n`;
+                msg += `• Syarat Sisa Hari (${r.remainingDays} hari lagi): Wajib *Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari*\n\n`;
+            } else {
+                msg += `• Status Target Bulanan: *Lunas / Tercapai!* 🎉\n\n`;
+            }
+
+            msg += `*4. RINCIAN SALES HARIAN BULAN INI:*\n`;
+            if(transactions.length > 0) {
+                const sortedTx = [...transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
+                sortedTx.forEach((t) => {
+                    msg += `• ${formatDateToID(t.date)}: *Rp ${t.total.toLocaleString('id-ID')}*\n`;
+                });
+            } else {
+                msg += `(Belum ada data transaksi masuk)\n`;
+            }
+            
+            msg += `\n-----------------------------------------------\n`;
+            msg += `_Laporan ini diperbarui secara otomatis via Realtime Cloud Database._`;
+            
             return msg;
         }
 
         function copyReportToClipboard() {
-            navigator.clipboard.writeText(generateReportTextMessage()).then(() => alert("Laporan disalin!"));
+            navigator.clipboard.writeText(generateReportTextMessage()).then(() => alert("Laporan lengkap beserta rincian harian disalin!"));
         }
 
         function shareToWhatsApp() {
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(generateReportTextMessage())}`, '_blank');
         }
 
-        // Jalankan inisialisasi secara aman dan agresif
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initFirebaseListeners);
-        } else {
-            initFirebaseListeners();
-        }
+        window.onload = initFirebaseListeners;
     </script>
 </body>
 </html>
