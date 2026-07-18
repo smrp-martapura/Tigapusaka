@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Toko Bulanan - CV. Tiga Pusako Borneo</title>
     
-    <!-- TRICK SINGLE FILE PWA: Suntikan Manifest Langsung Tanpa File Eksternal -->
-    <link class="pwa-manifest" rel="manifest" href="data:application/json;charset=utf-8,%7B%22short_name%22%3A%22CV%20TIGA%20PUSAKA%22%2C%22name%22%3A%22CV%20Tiga%20Pusako%20Borneo%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F869%2F869636.png%22%2C%22type%22%3A%22image%252Fpng%22%2C%22sizes%22%3A%22512x512%22%7D%5D%7D">
+    <!-- TRICK SINGLE FILE PWA: Ikon Resmi Aplikasi Terintegrasi Langsung (Resolusi 512x512) -->
+    <link class="pwa-manifest" rel="manifest" href="data:application/json;charset=utf-8,%7B%22short_name%22%3A%22CV%20TIGA%20PUSAKA%22%2C%22name%22%3A%22CV%20Tiga%20Pusako%20Borneo%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fraw.githubusercontent.com%2Fsmrp-martapura%2FTigapusaka%2Fmain%2F701096.jpg%22%2C%22type%22%3A%22image%252Fpng%22%2C%22sizes%22%3A%22512x512%22%7D%5D%7D">
     
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Apple Touch Icon (Ikon layar utama untuk perangkat iOS iPhone/iPad) -->
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/smrp-martapura/Tigapusaka/main/701096.jpg">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,12 +28,13 @@
 </head>
 <body class="text-slate-800 antialiased">
 
-    <!-- NAVIGATION -->
+    <!-- NAVIGATION WITH OFFICIAL LOGO -->
     <header class="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="p-2.5 bg-blue-600 text-white rounded-xl shadow-md">
-                    <i class="fa-solid fa-store text-lg"></i>
+                <!-- LOGO VISUAL TOKO CV TIGA PUSAKA BORNEO -->
+                <div class="w-11 h-11 rounded-xl shadow-md overflow-hidden border border-slate-100 flex items-center justify-center bg-white p-1">
+                    <img src="https://raw.githubusercontent.com/smrp-martapura/Tigapusaka/main/701096.jpg" alt="Logo CV Tiga Pusaka Borneo" class="w-full h-full object-contain">
                 </div>
                 <div>
                     <h1 class="font-bold text-slate-950 tracking-tight leading-tight">CV. Tiga Pusako Borneo</h1>
@@ -102,7 +106,6 @@
                     <i class="fa-solid fa-chart-line text-blue-600 text-lg"></i>
                     <h3 class="font-bold text-slate-900 text-base">Analisis & Proyeksi Kinerja Toko</h3>
                 </div>
-                <!-- Tombol aksi salin & share -->
                 <div class="flex space-x-2">
                     <button onclick="copyReportToClipboard()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition">
                         <i class="fa-solid fa-copy text-blue-600"></i> Salin Laporan
@@ -139,7 +142,7 @@
                     </form>
                 </div>
 
-                <!-- FORM BARU: INPUT SALES REKAP BULANAN (HISTORIS) -->
+                <!-- FORM 2: INPUT SALES REKAP BULANAN -->
                 <div class="bg-white p-6 rounded-2xl border border-violet-200 shadow-lg">
                     <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-box-archive text-violet-600"></i> Input Data Bulanan (Histori)
@@ -174,6 +177,7 @@
                     </form>
                 </div>
 
+                <!-- FORM 3: ATUR CONFIG PARAMETER -->
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-md space-y-4">
                     <h3 class="font-bold text-slate-900 font-semibold">Atur Target & Actual GM%</h3>
                     <form onsubmit="handleUpdateTargets(event)" class="space-y-4">
@@ -268,7 +272,7 @@
         </div>
     </main>
 
-    <!-- ADMIN MODAL -->
+    <!-- ADMIN MODAL PIN -->
     <div id="adminPinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full mx-4">
             <h3 class="text-lg font-bold text-slate-900 text-center mb-2">Verifikasi Owner / Admin</h3>
@@ -280,12 +284,12 @@
         </div>
     </div>
 
-    <!-- FIREBASE SDKs -->
+    <!-- FIREBASE COMPAT SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <script>
-        // CONFIG FIREBASE
+        // FIREBASE DATABASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyC0vc5NmxqXAmR7FGQIRqX-NcknIuCZpIU",
             authDomain: "tiga-pusaka.firebaseapp.com",
@@ -416,7 +420,6 @@
             });
         }
 
-        // FUNGSI SUBMIT DATA HISTORI BULANAN MANUAL
         function handleMonthlyHistorySubmit(e) {
             e.preventDefault();
             const period = document.getElementById('histPeriod').value;
@@ -444,7 +447,6 @@
             });
         }
 
-        // Memformat String Tanggal ISO ke Format Indonesia yang rapi (Contoh: "16 Mar 2026")
         function formatDateToID(dateString) {
             try {
                 const parts = dateString.split('-');
@@ -539,7 +541,7 @@
         }
 
         function renderTransactions() {
-            const sortedTx = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
+            const sortedTx = [...transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
             document.getElementById('transactionTableBody').innerHTML = sortedTx.map(t => `
                 <tr>
                     <td class="py-3 px-4 font-semibold">${formatDateToID(t.date)}</td>
@@ -591,9 +593,6 @@
             });
         }
 
-        // =========================================================
-        // FUNGSI UTK PEMBUATAN STRUKTUR TEKS LAPORAN (WA & COPY)
-        // =========================================================
         function buildReportData() {
             let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
             let targetSales = storeTargets.targetSales;
@@ -637,9 +636,6 @@
             };
         }
 
-        // =========================================================
-        // FUNGSI ANALISIS DENGAN PROYEKSI & FORECASTING
-        // =========================================================
         function generateAnalysisInsight() {
             const r = buildReportData();
 
@@ -675,9 +671,6 @@
             document.getElementById('aiInsightText').innerHTML = text;
         }
 
-        // =========================================================
-        // AKSI COPY REPORT & WHATSAPP SHARE (DENGAN LIST DETAIL TANGGAL 1)
-        // =========================================================
         function generateReportTextMessage() {
             const r = buildReportData();
             
@@ -687,7 +680,6 @@
             
             msg += `*1. DETAIL PENJUALAN HARIAN:*\n`;
             if (transactions.length > 0) {
-                // Urutkan transaksi dari tanggal tertua (tanggal 1) ke terbaru
                 const chronologicalTx = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
                 chronologicalTx.forEach((t) => {
                     msg += `• ${formatDateToID(t.date)}: Rp ${t.total.toLocaleString('id-ID')}\n`;
@@ -735,7 +727,7 @@
             window.open(waUrl, '_blank');
         }
 
-        // TRICK SINGLE FILE SERVICE WORKER: Skrip pendaftaran internal langsung aktif
+        // PWA SELF-CONTAINED INTERNAL SERVICE WORKER
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
