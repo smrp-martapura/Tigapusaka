@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Toko Bulanan - CV. Tiga Pusako Borneo</title>
-    
-    <!-- TRICK SINGLE FILE PWA: Ikon Resmi Aplikasi Terintegrasi Langsung (Resolusi 512x512) -->
     <link class="pwa-manifest" rel="manifest" href="data:application/json;charset=utf-8,%7B%22short_name%22%3A%22CV%20TIGA%20PUSAKA%22%2C%22name%22%3A%22CV%20Tiga%20Pusako%20Borneo%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fraw.githubusercontent.com%2Fsmrp-martapura%2FTigapusaka%2Fmain%2Flogo.png%22%2C%22type%22%3A%22image%252Fpng%22%2C%22sizes%22%3A%22512x512%22%7D%5D%7D">
-    
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <!-- Apple Touch Icon (Ikon layar utama untuk perangkat iOS iPhone/iPad) -->
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/smrp-martapura/Tigapusaka/main/logo.png">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,7 +27,6 @@
     <header class="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <!-- LOGO VISUAL TOKO CV TIGA PUSAKA BORNEO -->
                 <div class="w-11 h-11 rounded-xl shadow-md overflow-hidden border border-slate-100 flex items-center justify-center bg-white p-1">
                     <img src="https://raw.githubusercontent.com/smrp-martapura/Tigapusaka/main/logo.png" alt="Logo CV Tiga Pusaka Borneo" class="w-full h-full object-contain">
                 </div>
@@ -116,7 +110,9 @@
                 </div>
             </div>
             <div id="aiInsightText" class="text-sm text-slate-700 leading-relaxed space-y-2">
-                Menghubungkan ke Realtime Database...
+                <div class="flex items-center gap-2 text-blue-600 font-medium">
+                    <i class="fa-solid fa-circle-notch animate-spin"></i> Menghubungkan ke Realtime Database...
+                </div>
             </div>
         </div>
 
@@ -147,7 +143,7 @@
                     <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-box-archive text-violet-600"></i> Input Data Bulanan (Histori)
                     </h3>
-                    <p class="text-xs text-slate-500 mb-3">Gunakan form ini untuk langsung menginput arsip laporan bulan lalu (Januari - sekarang) tanpa harus memasukkan data harian.</p>
+                    <p class="text-xs text-slate-500 mb-3">Gunakan form ini untuk langsung menginput arsip laporan bulan lalu tanpa harus memasukkan data harian.</p>
                     <form id="monthlyHistoryForm" onsubmit="handleMonthlyHistorySubmit(event)" class="space-y-3">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">Nama Bulan / Periode</label>
@@ -289,7 +285,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <script>
-        // FIREBASE DATABASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyC0vc5NmxqXAmR7FGQIRqX-NcknIuCZpIU",
             authDomain: "tiga-pusaka.firebaseapp.com",
@@ -301,60 +296,106 @@
             measurementId: "G-91SN9E2ZVK"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
+        let db;
         let storeTargets = { targetSales: 45000000, targetGM: 20, actualGMAvg: 18.5 };
         let transactions = [];
         let closingHistory = [];
         let isAdmin = false;
         let salesChart = null;
+        let isConnected = false;
 
         function initFirebaseListeners() {
+            console.log("Memulai inisialisasi Firebase...");
             document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
 
-            db.ref("store_config/targets").on("value", (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    storeTargets = data;
-                    document.getElementById('targetSalesInput').value = storeTargets.targetSales;
-                    document.getElementById('targetGMInput').value = storeTargets.targetGM;
-                    document.getElementById('actualGMInput').value = storeTargets.actualGMAvg;
+            // Proteksi Batas Waktu Koneksi (Timeout 6 Detik)
+            setTimeout(() => {
+                if (!isConnected) {
+                    console.warn("Koneksi Firebase melampaui batas waktu 6 detik.");
+                    document.getElementById('aiInsightText').innerHTML = `
+                        <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-start gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-base mt-0.5"></i>
+                            <div>
+                                <strong class="block mb-0.5">Koneksi Awan Lambat / Terputus</strong>
+                                Database sedang sibuk atau browser Anda memblokir koneksi websocket. Mencoba memuat ulang data tersempan lokal...
+                            </div>
+                        </div>
+                    `;
+                    updateUI(); // Paksa render layar agar dashboard tidak kosong total
                 }
-                updateUI();
-            });
+            }, 6000);
 
-            db.ref("transactions").on("value", (snapshot) => {
-                transactions = [];
-                const data = snapshot.val();
-                if (data) {
-                    Object.keys(data).forEach((key) => {
-                        transactions.push({ id: key, date: data[key].date, total: data[key].total });
-                    });
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
                 }
-                updateUI();
-            });
+                db = firebase.database();
 
-            db.ref("closings").on("value", (snapshot) => {
-                closingHistory = [];
-                const data = snapshot.val();
-                if (data) {
-                    Object.keys(data).forEach((key) => {
-                        closingHistory.push({ id: key, ...data[key] });
-                    });
-                    closingHistory.sort((a, b) => b.timestamp - a.timestamp);
-                }
-                updateUI();
-            });
+                // Tes Ping Koneksi
+                db.ref(".info/connected").on("value", (snap) => {
+                    if (snap.val() === true) {
+                        isConnected = true;
+                        console.log("Firebase Terhubung Sukses!");
+                    }
+                });
+
+                db.ref("store_config/targets").on("value", (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        storeTargets = data;
+                        document.getElementById('targetSalesInput').value = storeTargets.targetSales;
+                        document.getElementById('targetGMInput').value = storeTargets.targetGM;
+                        document.getElementById('actualGMInput').value = storeTargets.actualGMAvg;
+                    }
+                    updateUI();
+                }, (error) => {
+                    console.error("Gagal membaca targets:", error);
+                });
+
+                db.ref("transactions").on("value", (snapshot) => {
+                    transactions = [];
+                    const data = snapshot.val();
+                    if (data) {
+                        Object.keys(data).forEach((key) => {
+                            transactions.push({ id: key, date: data[key].date, total: parseFloat(data[key].total) || 0 });
+                        });
+                    }
+                    updateUI();
+                }, (error) => {
+                    console.error("Gagal membaca transaksi:", error);
+                });
+
+                db.ref("closings").on("value", (snapshot) => {
+                    closingHistory = [];
+                    const data = snapshot.val();
+                    if (data) {
+                        Object.keys(data).forEach((key) => {
+                            closingHistory.push({ id: key, ...data[key] });
+                        });
+                        closingHistory.sort((a, b) => b.timestamp - a.timestamp);
+                    }
+                    updateUI();
+                }, (error) => {
+                    console.error("Gagal membaca arsip:", error);
+                });
+
+            } catch (err) {
+                console.error("Kesalahan Utama Inisialisasi:", err);
+                document.getElementById('aiInsightText').innerHTML = `<p class="text-red-500 font-bold text-xs">Eror Inisialisasi: ${err.message}</p>`;
+            }
         }
 
         function updateUI() {
-            updateDashboardMetrics();
-            renderProgressBars();
-            renderTransactions();
-            renderClosingHistory();
-            renderSalesChart();
-            generateAnalysisInsight();
+            try {
+                updateDashboardMetrics();
+                renderProgressBars();
+                renderTransactions();
+                renderClosingHistory();
+                renderSalesChart();
+                generateAnalysisInsight();
+            } catch (err) {
+                console.error("UI Render Error: ", err);
+            }
         }
 
         function toggleAccessMode() {
@@ -392,9 +433,9 @@
 
         function updateDashboardMetrics() {
             let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
-            let targetSales = storeTargets.targetSales;
-            let targetGM = storeTargets.targetGM;
-            let actualGMAvg = storeTargets.actualGMAvg;
+            let targetSales = storeTargets.targetSales || 0;
+            let targetGM = storeTargets.targetGM || 0;
+            let actualGMAvg = storeTargets.actualGMAvg || 0;
             
             let avgSales = transactions.length > 0 ? (totalSales / transactions.length) : 0;
             let remainingSales = Math.max(0, targetSales - totalSales);
@@ -440,7 +481,7 @@
             };
 
             db.ref("closings").push(payload).then(() => {
-                alert(`Data bulanan untuk "${period}" berhasil ditambahkan ke arsip!`);
+                alert(`Data bulanan untuk "${period}" berhasil disimpan!`);
                 document.getElementById('monthlyHistoryForm').reset();
             }).catch(err => {
                 alert("Gagal menyimpan data histori: " + err.message);
@@ -486,7 +527,7 @@
             const periodName = prompt("Masukkan Periode Bulan untuk Klosing ini:", defaultPeriod);
             if (!periodName) return;
 
-            if (confirm(`Apakah Anda yakin ingin melakukan KLOSING untuk periode: ${periodName}?\n\nSemua transaksi harian saat ini akan diarsipkan ke log bulanan dan dibersihkan dari database berjalan.`)) {
+            if (confirm(`Apakah Anda yakin ingin melakukan KLOSING untuk periode: ${periodName}?`)) {
                 let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
                 let targetSales = storeTargets.targetSales;
                 let targetGM = storeTargets.targetGM;
@@ -512,11 +553,11 @@
 
         function renderProgressBars() {
             let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
-            let targetSales = storeTargets.targetSales;
-            let targetGM = storeTargets.targetGM;
-            let actualGMAvg = storeTargets.actualGMAvg;
-            let pctSales = Math.min(100, Math.round((totalSales / targetSales) * 100)) || 0;
-            let pctGM = Math.min(100, Math.round((actualGMAvg / targetGM) * 100)) || 0;
+            let targetSales = storeTargets.targetSales || 0;
+            let targetGM = storeTargets.targetGM || 0;
+            let actualGMAvg = storeTargets.actualGMAvg || 0;
+            let pctSales = targetSales > 0 ? Math.min(100, Math.round((totalSales / targetSales) * 100)) : 0;
+            let pctGM = targetGM > 0 ? Math.min(100, Math.round((actualGMAvg / targetGM) * 100)) : 0;
 
             document.getElementById('progressContainer').innerHTML = `
                 <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl">
@@ -557,11 +598,11 @@
             document.getElementById('closingTableBody').innerHTML = closingHistory.map(c => `
                 <tr class="bg-slate-50/50">
                     <td class="py-3.5 px-4 font-bold text-slate-900">${c.period}</td>
-                    <td class="py-3.5 px-4 text-right">Rp ${c.targetSales.toLocaleString('id-ID')}</td>
-                    <td class="py-3.5 px-4 text-right font-bold text-blue-600">Rp ${c.actualSales.toLocaleString('id-ID')}</td>
-                    <td class="py-3.5 px-4 text-center font-bold text-blue-700">${c.acvPercent}%</td>
-                    <td class="py-3.5 px-4 text-center">${c.targetGM}%</td>
-                    <td class="py-3.5 px-4 text-center font-bold text-emerald-600">${c.actualGM}%</td>
+                    <td class="py-3.5 px-4 text-right">Rp ${(c.targetSales || 0).toLocaleString('id-ID')}</td>
+                    <td class="py-3.5 px-4 text-right font-bold text-blue-600">Rp ${(c.actualSales || 0).toLocaleString('id-ID')}</td>
+                    <td class="py-3.5 px-4 text-center font-bold text-blue-700">${c.acvPercent || 0}%</td>
+                    <td class="py-3.5 px-4 text-center">${c.targetGM || 0}%</td>
+                    <td class="py-3.5 px-4 text-center font-bold text-emerald-600">${c.actualGM || 0}%</td>
                     <td class="py-3.5 px-4 text-center">
                         ${isAdmin ? `<button onclick="deleteClosing('${c.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button>` : '-'}
                     </td>
@@ -595,12 +636,12 @@
 
         function buildReportData() {
             let totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
-            let targetSales = storeTargets.targetSales;
-            let targetGM = storeTargets.targetGM;
-            let actualGMAvg = storeTargets.actualGMAvg;
+            let targetSales = storeTargets.targetSales || 0;
+            let targetGM = storeTargets.targetGM || 0;
+            let actualGMAvg = storeTargets.actualGMAvg || 0;
             let acvSales = targetSales > 0 ? ((totalSales / targetSales) * 100).toFixed(1) : 0;
 
-            let baseDate = new Date();
+            let baseDate = new Date(); 
             if (transactions.length > 0) {
                 const sortedTx = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
                 baseDate = new Date(sortedTx[0].date);
@@ -608,46 +649,57 @@
             
             let totalDaysInMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate();
             let passedDays = baseDate.getDate();
+            
+            if (passedDays > totalDaysInMonth) passedDays = totalDaysInMonth; 
+            
             let remainingDays = Math.max(1, totalDaysInMonth - passedDays);
             let avgSales = transactions.length > 0 ? (totalSales / transactions.length) : 0;
 
+            let constantDailyTarget = targetSales / totalDaysInMonth;
+            let shouldBeTargetToday = constantDailyTarget * passedDays;
+            let gapToday = totalSales - shouldBeTargetToday;
+
             let estimatedEndMonthSales = avgSales * totalDaysInMonth;
             let remainingTargetSales = Math.max(0, targetSales - totalSales);
-            let requiredDailySales = remainingTargetSales > 0 ? (remainingTargetSales / remainingDays) : 0;
-            let estimatedEndMonthGM = (avgSales * totalDaysInMonth) * (actualGMAvg / 100);
+            let requiredDailySales = remainingTargetSales / remainingDays;
+            let estimatedEndMonthGM = estimatedEndMonthSales * (actualGMAvg / 100);
 
             const formatMonth = baseDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 
             return {
-                formatMonth,
-                totalSales,
-                targetSales,
-                acvSales,
-                actualGMAvg,
-                targetGM,
-                totalDaysInMonth,
-                passedDays,
-                remainingDays,
-                avgSales,
-                estimatedEndMonthSales,
-                remainingTargetSales,
-                requiredDailySales,
-                estimatedEndMonthGM
+                formatMonth, totalSales, targetSales, acvSales, actualGMAvg, targetGM,
+                totalDaysInMonth, passedDays, remainingDays, avgSales, constantDailyTarget,
+                shouldBeTargetToday, gapToday, estimatedEndMonthSales, remainingTargetSales,
+                requiredDailySales, estimatedEndMonthGM
             };
         }
 
         function generateAnalysisInsight() {
+            // Jika koneksi internet putus dan data kosong, tampilkan peringatan
+            if(transactions.length === 0 && !isConnected) {
+                return;
+            }
+
             const r = buildReportData();
+            let gapBadge = r.gapToday >= 0 ? 
+                `<span class="text-emerald-600 font-bold">(Surplus +Rp ${Math.round(r.gapToday).toLocaleString('id-ID')})</span>` : 
+                `<span class="text-red-500 font-bold">(Kekurangan -Rp ${Math.abs(Math.round(r.gapToday)).toLocaleString('id-ID')})</span>`;
 
             let text = `
                 <div class="mb-3">
                     <p>• Penjualan berjalan saat ini: <strong>Rp ${r.totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${r.acvSales}%</strong>).</p>
                     <p>• Rata-rata margin profit (GM%): <strong>${r.actualGMAvg}%</strong> (Target: <strong>${r.targetGM}%</strong>).</p>
                 </div>
-                
-                <div class="p-3 bg-white border border-blue-100 rounded-xl shadow-sm space-y-2">
-                    <h4 class="font-bold text-blue-800 text-xs uppercase mb-2 border-b border-blue-50 pb-1">📈 Proyeksi Akhir Bulan (${r.totalDaysInMonth} Hari)</h4>
-                    
+                <div class="p-4 bg-white border border-blue-100 rounded-xl shadow-sm mb-3 space-y-1.5">
+                    <h4 class="font-bold text-slate-900 text-xs uppercase mb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-crosshairs text-blue-600"></i> Analisis Target Harian Berjalan (Hari ke-${r.passedDays})
+                    </h4>
+                    <p class="text-sm">• Rata-rata Target / Hari: <strong>Rp ${Math.round(r.constantDailyTarget).toLocaleString('id-ID')}</strong></p>
+                    <p class="text-sm">• Target Seharusnya S/D Hari Ini: <strong>Rp ${Math.round(r.shouldBeTargetToday).toLocaleString('id-ID')}</strong></p>
+                    <p class="text-sm">• Selisih Kekurangan Hari Ini: ${gapBadge}</p>
+                </div>
+                <div class="p-4 bg-white border border-blue-100 rounded-xl shadow-sm space-y-2">
+                    <h4 class="font-bold text-blue-800 text-xs uppercase mb-1 border-b border-blue-50 pb-1">📈 Proyeksi Akhir Bulan (${r.totalDaysInMonth} Hari)</h4>
                     <p class="text-sm">• <strong>Estimasi Sales Akhir:</strong> Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}</p>
                     <p class="text-sm">• <strong>Estimasi Rupiah GM:</strong> <span class="text-emerald-600 font-bold">Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}</span></p>
             `;
@@ -656,15 +708,11 @@
                 text += `
                     <div class="mt-2 pt-2 border-t border-blue-50">
                         <p class="text-sm text-red-600">🎯 <strong>Sisa Target Bulanan:</strong> Rp ${r.remainingTargetSales.toLocaleString('id-ID')}</p>
-                        <p class="text-xs text-slate-500 mt-1">Guna mencapai target bulan ini, toko perlu mengejar omset rata-rata <strong>Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari</strong> di sisa ${r.remainingDays} hari ke depan.</p>
+                        <p class="text-xs text-slate-500 mt-1">Untuk target bulan ini, toko perlu mengejar omset rata-rata <strong>Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari</strong> di sisa ${r.remainingDays} hari.</p>
                     </div>
                 `;
             } else {
-                text += `
-                    <div class="mt-2 pt-2 border-t border-blue-50">
-                        <p class="text-sm text-emerald-600 font-bold">🎉 Luar biasa! Target Sales Bulanan telah TERCAPAI!</p>
-                    </div>
-                `;
+                text += `<div class="mt-2 pt-2 border-t border-blue-50"><p class="text-sm text-emerald-600 font-bold">🎉 Target Sales Bulanan telah TERCAPAI!</p></div>`;
             }
 
             text += `</div>`;
@@ -673,76 +721,26 @@
 
         function generateReportTextMessage() {
             const r = buildReportData();
-            
-            let msg = `*LAPORAN KINERJA TOKO - CV. TIGA PUSAKO BORNEO*\n`;
-            msg += `Periode: *${r.formatMonth}*\n`;
-            msg += `-----------------------------------------------\n\n`;
-            
-            msg += `*1. DETAIL PENJUALAN HARIAN:*\n`;
-            if (transactions.length > 0) {
-                const chronologicalTx = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
-                chronologicalTx.forEach((t) => {
-                    msg += `• ${formatDateToID(t.date)}: Rp ${t.total.toLocaleString('id-ID')}\n`;
-                });
-            } else {
-                msg += `• (Belum ada data transaksi berjalan)\n`;
-            }
-            msg += `\n`;
-
-            msg += `*2. RINGKASAN REKAPITULASI:*\n`;
-            msg += `• Total Sales Toko (Actual): *Rp ${r.totalSales.toLocaleString('id-ID')}*\n`;
-            msg += `• Target Sales Bulanan: Rp ${r.targetSales.toLocaleString('id-ID')}\n`;
-            msg += `• Pencapaian (ACV Sales): *${r.acvSales}%*\n`;
-            msg += `• Rata-rata Sales Harian: Rp ${Math.round(r.avgSales).toLocaleString('id-ID')}\n`;
-            msg += `• Actual GM% (Avg): *${r.actualGMAvg}%* (Target: ${r.targetGM}%)\n\n`;
-            
-            msg += `*3. PROYEKSI AKHIR BULAN (${r.totalDaysInMonth} Hari):*\n`;
-            msg += `• Estimasi Sales Akhir: *Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}*\n`;
-            msg += `• Estimasi Rupiah GM: *Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}*\n\n`;
-            
-            msg += `*4. ANALISIS TARGET SISA HARI:*\n`;
-            if (r.remainingTargetSales > 0) {
-                msg += `• Sisa Target Bulanan: Rp ${r.remainingTargetSales.toLocaleString('id-ID')}\n`;
-                msg += `• Sisa Waktu Bulan Ini: *${r.remainingDays} Hari*\n`;
-                msg += `• Target Wajib Harian: *Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari*\n`;
-            } else {
-                msg += `• *🎉 TARGET BULANAN TELAH TERCAPAI!*\n`;
-            }
-            
+            let msg = `*LAPORAN KINERJA TOKO - CV. TIGA PUSAKO BORNEO*\nPeriode: *${r.formatMonth}*\n-----------------------------------------------\n\n`;
+            msg += `*1. RINGKASAN REKAPITULASI BULANAN:*\n• Total Sales Toko (Actual): *Rp ${r.totalSales.toLocaleString('id-ID')}*\n• Target Sales Bulanan: Rp ${r.targetSales.toLocaleString('id-ID')}\n• Pencapaian (ACV Sales): *${r.acvSales}%*\n\n`;
+            msg += `*2. PROYEKSI AKHIR BULAN (${r.totalDaysInMonth} Hari):*\n• Estimasi Sales Akhir: *Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}*\n• Estimasi Rupiah GM: *Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}*`;
             return msg;
         }
 
         function copyReportToClipboard() {
-            const reportText = generateReportTextMessage();
-            navigator.clipboard.writeText(reportText).then(() => {
-                alert("Laporan berhasil disalin beserta rincian tanggal!");
-            }).catch(err => {
-                alert("Gagal menyalin teks: " + err);
-            });
+            navigator.clipboard.writeText(generateReportTextMessage()).then(() => alert("Laporan disalin!"));
         }
 
         function shareToWhatsApp() {
-            const reportText = encodeURIComponent(generateReportTextMessage());
-            const waUrl = `https://api.whatsapp.com/send?text=${reportText}`;
-            window.open(waUrl, '_blank');
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(generateReportTextMessage())}`, '_blank');
         }
 
-        // PWA SELF-CONTAINED INTERNAL SERVICE WORKER
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    self.addEventListener('install', e => self.skipWaiting());
-                    self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
-                `;
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl)
-                    .then(reg => console.log('Single File PWA Aktif Sempurna'))
-                    .catch(err => console.error(err));
-            });
+        // Jalankan inisialisasi secara aman dan agresif
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFirebaseListeners);
+        } else {
+            initFirebaseListeners();
         }
-
-        window.onload = initFirebaseListeners;
     </script>
 </body>
 </html>
