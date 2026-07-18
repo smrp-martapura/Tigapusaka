@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -51,11 +51,12 @@
     <!-- MAIN CONTENT -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- BANNER INFO -->
+        <!-- BANNER INFO WITH OWNER ALDEY REYHAN -->
         <div class="mb-8 p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl shadow-xl relative overflow-hidden">
             <div class="relative z-10">
                 <span class="px-3 py-1 bg-white/10 text-xs font-semibold rounded-full tracking-wider uppercase mb-3 inline-block">Profil Toko Resmi</span>
-                <h2 class="text-2xl font-extrabold mb-1">CV. TIGA PUSAKO BORNEO</h2>
+                <h2 class="text-2xl font-extrabold mb-0.5">CV. TIGA PUSAKO BORNEO</h2>
+                <p class="text-sm font-semibold text-blue-400 mb-3"><i class="fa-solid fa-user-tie w-5"></i> Owner: Aldey Reyhan</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-slate-300 mt-3 border-t border-white/10 pt-3">
                     <div class="space-y-1">
                         <p><i class="fa-solid fa-location-dot w-5 text-blue-400"></i> Simpang Martapura/F [SMRP]</p>
@@ -141,7 +142,6 @@
                     <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-box-archive text-violet-600"></i> Input Data Bulanan (Histori)
                     </h3>
-                    <p class="text-xs text-slate-500 mb-3">Gunakan form ini untuk langsung menginput arsip laporan bulan lalu tanpa harus memasukkan data harian.</p>
                     <form id="monthlyHistoryForm" onsubmit="handleMonthlyHistorySubmit(event)" class="space-y-3">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">Nama Bulan / Periode</label>
@@ -150,21 +150,21 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-1">Target Sales (Rp)</label>
-                                <input type="number" id="histTargetSales" required placeholder="45000000" class="w-full px-3 py-2 border rounded-xl text-sm">
+                                <input type="number" id="histTargetSales" required class="w-full px-3 py-2 border rounded-xl text-sm">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-1">Actual Sales (Rp)</label>
-                                <input type="number" id="histActualSales" required placeholder="46500000" class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-blue-700">
+                                <input type="number" id="histActualSales" required class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-blue-700">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-1">Target GM (%)</label>
-                                <input type="number" id="histTargetGM" step="0.1" min="0" max="100" required placeholder="20" class="w-full px-3 py-2 border rounded-xl text-sm">
+                                <input type="number" id="histTargetGM" step="0.1" required class="w-full px-3 py-2 border rounded-xl text-sm">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-1">Actual GM Avg (%)</label>
-                                <input type="number" id="histActualGM" step="0.1" min="0" max="100" required placeholder="18.5" class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-emerald-700">
+                                <input type="number" id="histActualGM" step="0.1" required class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-emerald-700">
                             </div>
                         </div>
                         <button type="submit" class="w-full py-2.5 bg-violet-600 text-white font-semibold rounded-xl text-xs hover:bg-violet-700">Simpan Arsip Bulanan</button>
@@ -182,20 +182,17 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-1">Target GM (%)</label>
-                                <input type="number" id="targetGMInput" step="0.1" min="0" max="100" required class="w-full px-3 py-2 border rounded-xl text-sm">
+                                <input type="number" id="targetGMInput" step="0.1" required class="w-full px-3 py-2 border rounded-xl text-sm">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-1">Actual GM Avg (%)</label>
-                                <input type="number" id="actualGMInput" step="0.1" min="0" max="100" required class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-emerald-700">
+                                <input type="number" id="actualGMInput" step="0.1" required class="w-full px-3 py-2 border rounded-xl text-sm font-semibold text-emerald-700">
                             </div>
                         </div>
                         <button type="submit" class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-xl text-xs">Simpan Parameter GM & Target</button>
                     </form>
-                    
                     <hr class="border-slate-100">
-                    
                     <div>
-                        <h4 class="text-xs font-bold text-red-500 uppercase mb-2">Klosingan Akhir Bulan</h4>
                         <button onclick="triggerClosing()" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2">
                             <i class="fa-solid fa-box-archive"></i> Klosing & Simpan Bulan Ini
                         </button>
@@ -208,7 +205,7 @@
                 <div>
                     <h3 class="font-bold text-slate-900 text-lg mb-2">Sistem Dashboard Aktif (Realtime Cloud)</h3>
                     <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                        Dashboard ini terhubung secara global dengan **Firebase Realtime Database**. Semua perangkat akan melihat perubahan data secara instan!
+                        Dashboard ini terhubung secara global dengan **Firebase Realtime Database**. Semua perangkat melihat data secara sinkron dan instan.
                     </p>
                 </div>
             </div>
@@ -283,7 +280,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <script>
-        // CONFIG PARSING LENGKAP & UTUH
         const firebaseConfig = {
             apiKey: "AIzaSyC0vc5NmxqXAmR7FGQIRqX-NcknIuCZpIU",
             authDomain: "tiga-pusaka.firebaseapp.com",
@@ -347,7 +343,6 @@
 
             } catch (err) {
                 console.error(err);
-                document.getElementById('aiInsightText').innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
             }
         }
 
@@ -655,7 +650,7 @@
                 text += `
                     <div class="mt-2 pt-2 border-t border-blue-50">
                         <p class="text-sm text-red-600">🎯 <strong>Sisa Target Bulanan:</strong> Rp ${r.remainingTargetSales.toLocaleString('id-ID')}</p>
-                        <p class="text-xs text-slate-500 mt-1">Untuk target bulan ini, toko perlu mengejar omset rata-rata <strong>Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari</strong> di sisa ${r.remainingDays} hari.</p>
+                        <p class="text-xs text-slate-500 mt-1">Toko perlu mengejar omset rata-rata <strong>Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari</strong> di sisa ${r.remainingDays} hari.</p>
                     </div>
                 `;
             } else {
@@ -666,15 +661,14 @@
             document.getElementById('aiInsightText').innerHTML = text;
         }
 
-        // FUNGSI UPDATE UTAMA: MENAMBAHKAN ANALISIS DAN DETAIL SALES HARIAN KE TEXT WHATSAPP
         function generateReportTextMessage() {
             const r = buildReportData();
-            
             let statusGap = r.gapToday >= 0 
                 ? `SURPLUS (+Rp ${Math.round(r.gapToday).toLocaleString('id-ID')})` 
                 : `DEFISIT (-Rp ${Math.abs(Math.round(r.gapToday)).toLocaleString('id-ID')})`;
 
             let msg = `*LAPORAN KINERJA TOKO - CV. TIGA PUSAKO BORNEO*\n`;
+            msg += `Owner: *Aldey Reyhan*\n`;
             msg += `Periode: *${r.formatMonth}*\n`;
             msg += `-----------------------------------------------\n\n`;
             
