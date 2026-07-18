@@ -32,7 +32,6 @@
     <header class="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <!-- LOGO VISUAL TOKO CV TIGA PUSAKA BORNEO -->
                 <div class="w-11 h-11 rounded-xl shadow-md overflow-hidden border border-slate-100 flex items-center justify-center bg-white p-1">
                     <img src="https://raw.githubusercontent.com/smrp-martapura/Tigapusaka/main/logo.png" alt="Logo CV Tiga Pusaka Borneo" class="w-full h-full object-contain">
                 </div>
@@ -611,6 +610,11 @@
             let remainingDays = Math.max(1, totalDaysInMonth - passedDays);
             let avgSales = transactions.length > 0 ? (totalSales / transactions.length) : 0;
 
+            // LOGIKA TARGET HARIAN KONSTAN & KUMULATIF TANGGAL BERJALAN
+            let constantDailyTarget = targetSales / totalDaysInMonth;
+            let shouldBeTargetToday = constantDailyTarget * passedDays;
+            let gapToday = totalSales - shouldBeTargetToday;
+
             let estimatedEndMonthSales = avgSales * totalDaysInMonth;
             let remainingTargetSales = Math.max(0, targetSales - totalSales);
             let requiredDailySales = remainingTargetSales > 0 ? (remainingTargetSales / remainingDays) : 0;
@@ -629,6 +633,9 @@
                 passedDays,
                 remainingDays,
                 avgSales,
+                constantDailyTarget,
+                shouldBeTargetToday,
+                gapToday,
                 estimatedEndMonthSales,
                 remainingTargetSales,
                 requiredDailySales,
@@ -639,15 +646,30 @@
         function generateAnalysisInsight() {
             const r = buildReportData();
 
+            let gapBadge = "";
+            if (r.gapToday >= 0) {
+                gapBadge = `<span class="text-emerald-600 font-bold">(Surplus +Rp ${Math.round(r.gapToday).toLocaleString('id-ID')})</span>`;
+            } else {
+                gapBadge = `<span class="text-red-500 font-bold">(Minus -Rp ${Math.abs(Math.round(r.gapToday)).toLocaleString('id-ID')})</span>`;
+            }
+
             let text = `
                 <div class="mb-3">
                     <p>• Penjualan berjalan saat ini: <strong>Rp ${r.totalSales.toLocaleString('id-ID')}</strong> (ACV: <strong>${r.acvSales}%</strong>).</p>
                     <p>• Rata-rata margin profit (GM%): <strong>${r.actualGMAvg}%</strong> (Target: <strong>${r.targetGM}%</strong>).</p>
                 </div>
+
+                <div class="p-4 bg-white border border-blue-100 rounded-xl shadow-sm mb-3 space-y-1.5">
+                    <h4 class="font-bold text-slate-900 text-xs uppercase mb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-crosshairs text-blue-600"></i> Analisis Target Harian Berjalan (Hari ke-${r.passedDays})
+                    </h4>
+                    <p class="text-sm">• Target Rata-rata per Hari: <strong>Rp ${Math.round(r.constantDailyTarget).toLocaleString('id-ID')}</strong></p>
+                    <p class="text-sm">• Seharusnya S/D Hari Ini: <strong>Rp ${Math.round(r.shouldBeTargetToday).toLocaleString('id-ID')}</strong></p>
+                    <p class="text-sm">• Status Realisasi Hari Ini: ${gapBadge}</p>
+                </div>
                 
-                <div class="p-3 bg-white border border-blue-100 rounded-xl shadow-sm space-y-2">
-                    <h4 class="font-bold text-blue-800 text-xs uppercase mb-2 border-b border-blue-50 pb-1">📈 Proyeksi Akhir Bulan (${r.totalDaysInMonth} Hari)</h4>
-                    
+                <div class="p-4 bg-white border border-blue-100 rounded-xl shadow-sm space-y-2">
+                    <h4 class="font-bold text-blue-800 text-xs uppercase mb-1 border-b border-blue-50 pb-1">📈 Proyeksi Akhir Bulan (${r.totalDaysInMonth} Hari)</h4>
                     <p class="text-sm">• <strong>Estimasi Sales Akhir:</strong> Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}</p>
                     <p class="text-sm">• <strong>Estimasi Rupiah GM:</strong> <span class="text-emerald-600 font-bold">Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}</span></p>
             `;
@@ -689,22 +711,31 @@
             }
             msg += `\n`;
 
-            msg += `*2. RINGKASAN REKAPITULASI:*\n`;
+            msg += `*2. ANALISIS TARGET BERJALAN (Hari ke-${r.passedDays}):*\n`;
+            msg += `• Target Harian Konstan: Rp ${Math.round(r.constantDailyTarget).toLocaleString('id-ID')} / hari\n`;
+            msg += `• Target Seharusnya S/D Hari Ini: Rp ${Math.round(r.shouldBeTargetToday).toLocaleString('id-ID')}\n`;
+            if (r.gapToday >= 0) {
+                msg += `• Status Hari Ini: *SURPLUS (+Rp ${Math.round(r.gapToday).toLocaleString('id-ID'})*\n\n`;
+            } else {
+                msg += `• Status Hari Ini: *MINUS (-Rp ${Math.abs(Math.round(r.gapToday)).toLocaleString('id-ID'})*\n\n`;
+            }
+
+            msg += `*3. RINGKASAN REKAPITULASI BULANAN:*\n`;
             msg += `• Total Sales Toko (Actual): *Rp ${r.totalSales.toLocaleString('id-ID')}*\n`;
             msg += `• Target Sales Bulanan: Rp ${r.targetSales.toLocaleString('id-ID')}\n`;
             msg += `• Pencapaian (ACV Sales): *${r.acvSales}%*\n`;
             msg += `• Rata-rata Sales Harian: Rp ${Math.round(r.avgSales).toLocaleString('id-ID')}\n`;
             msg += `• Actual GM% (Avg): *${r.actualGMAvg}%* (Target: ${r.targetGM}%)\n\n`;
             
-            msg += `*3. PROYEKSI AKHIR BULAN (${r.totalDaysInMonth} Hari):*\n`;
+            msg += `*4. PROYEKSI AKHIR BULAN (${r.totalDaysInMonth} Hari):*\n`;
             msg += `• Estimasi Sales Akhir: *Rp ${Math.round(r.estimatedEndMonthSales).toLocaleString('id-ID')}*\n`;
             msg += `• Estimasi Rupiah GM: *Rp ${Math.round(r.estimatedEndMonthGM).toLocaleString('id-ID')}*\n\n`;
             
-            msg += `*4. ANALISIS TARGET SISA HARI:*\n`;
+            msg += `*5. ANALISIS TARGET SISA HARI:*\n`;
             if (r.remainingTargetSales > 0) {
                 msg += `• Sisa Target Bulanan: Rp ${r.remainingTargetSales.toLocaleString('id-ID')}\n`;
                 msg += `• Sisa Waktu Bulan Ini: *${r.remainingDays} Hari*\n`;
-                msg += `• Target Wajib Harian: *Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari*\n`;
+                msg += `• Target Wajib Harian Baru: *Rp ${Math.round(r.requiredDailySales).toLocaleString('id-ID')} / hari*\n`;
             } else {
                 msg += `• *🎉 TARGET BULANAN TELAH TERCAPAI!*\n`;
             }
@@ -715,7 +746,7 @@
         function copyReportToClipboard() {
             const reportText = generateReportTextMessage();
             navigator.clipboard.writeText(reportText).then(() => {
-                alert("Laporan berhasil disalin beserta rincian tanggal!");
+                alert("Laporan berhasil disalin beserta analisis target harian berjalan!");
             }).catch(err => {
                 alert("Gagal menyalin teks: " + err);
             });
